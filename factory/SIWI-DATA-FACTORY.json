@@ -1,0 +1,9 @@
+{
+	"name": "SIWI-DATA-FACTORY",
+	"location": "northeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "4897b220-9765-49b5-9445-e3343c8ba8f3",
+		"tenantId": "52c09282-682a-444e-87ef-f79f53826cb5"
+	}
+}

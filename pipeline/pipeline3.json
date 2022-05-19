@@ -1,0 +1,270 @@
+{
+	"name": "pipeline3",
+	"properties": {
+		"activities": [
+			{
+				"name": "Load stageEmployee",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Get LastLoadDate DimEmployee",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "POST",
+							"additionalHeaders": "Content-Type: applicatoin/json",
+							"requestBody": {
+								"value": "@{concat('{ \"query\" : \"query { employees(last: 1000, filter: {modifiedAt_gt:\\\"',activity('Get LastLoadDate DimEmployee').output.firstrow.LastLoadDate,'\\\"}) { edges { node { code contactDbId createdAt dateFrom dateTo dbId description email employeeGroupDbId modifiedAt glObject1 { code description dbId } employeeGroup { code description } } } } }\"}')}",
+								"type": "Expression"
+							},
+							"requestTimeout": ""
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "['node']['code']"
+								},
+								"sink": {
+									"name": "code",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['contactDbId']"
+								},
+								"sink": {
+									"name": "_ContactKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['createdAt']"
+								},
+								"sink": {
+									"name": "createdAt",
+									"type": "DateTime"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['dateFrom']"
+								},
+								"sink": {
+									"name": "dateFrom",
+									"type": "DateTime"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['dateTo']"
+								},
+								"sink": {
+									"name": "dateTo",
+									"type": "DateTime"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['dbId']"
+								},
+								"sink": {
+									"name": "_EmployeeKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['description']"
+								},
+								"sink": {
+									"name": "description",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['email']"
+								},
+								"sink": {
+									"name": "email",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['employeeGroupDbId']"
+								},
+								"sink": {
+									"name": "_EmployeeGroupKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['modifiedAt']"
+								},
+								"sink": {
+									"name": "modifiedAt",
+									"type": "DateTime"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['glObject1']['code']"
+								},
+								"sink": {
+									"name": "_CostCenterKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['glObject1']['description']"
+								},
+								"sink": {
+									"name": "CostCenterCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['glObject1']['dbId']"
+								},
+								"sink": {
+									"name": "CostCenterDescription",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['employeeGroup']['code']"
+								},
+								"sink": {
+									"name": "EmployeeGroupCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['employeeGroup']['description']"
+								},
+								"sink": {
+									"name": "EmployeeGroupDescription",
+									"type": "String"
+								}
+							}
+						],
+						"collectionReference": "$['data']['employees']['edges']"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "JSONEXL",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "stageEmployee",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Get LastLoadDate DimEmployee",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Truncate stageEmployee",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[dbo].[GetLastLoadDate]",
+						"storedProcedureParameters": {
+							"TableName": {
+								"type": "String",
+								"value": "DimEmployee"
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "stageEmployee",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "Truncate stageEmployee",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "TRUNCATE TABLE stage.Employee"
+						}
+					]
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-05-19T10:56:40Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
