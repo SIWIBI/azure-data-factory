@@ -1,0 +1,30 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "SIWI-DATA-FACTORY"
+		},
+		"Load Xkedger_functionKey": {
+			"value": ""
+		},
+		"SIWIBlobStorage_connectionString": {
+			"value": ""
+		},
+		"SIWIDBConn_connectionString": {
+			"value": ""
+		},
+		"Load Xkedger_properties_typeProperties_functionAppUrl": {
+			"value": "https://siwibiaf.azurewebsites.net"
+		},
+		"XledgerConn_properties_typeProperties_url": {
+			"value": "https://www.xledger.net/graphql"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}

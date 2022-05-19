@@ -1,0 +1,572 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "SIWI-DATA-FACTORY"
+		},
+		"Load Xkedger_functionKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'functionKey' of 'Load Xkedger'"
+		},
+		"SIWIBlobStorage_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SIWIBlobStorage'"
+		},
+		"SIWIDBConn_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SIWIDBConn'"
+		},
+		"Load Xkedger_properties_typeProperties_functionAppUrl": {
+			"type": "string",
+			"defaultValue": "https://siwibiaf.azurewebsites.net"
+		},
+		"XledgerConn_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://www.xledger.net/graphql"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline3')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Load stageEmployee",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Get LastLoadDate DimEmployee",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "POST",
+									"additionalHeaders": "Content-Type: applicatoin/json",
+									"requestBody": {
+										"value": "@{concat('{ \"query\" : \"query { employees(last: 1000, filter: {modifiedAt_gt:\\\"',activity('Get LastLoadDate DimEmployee').output.firstrow.LastLoadDate,'\\\"}) { edges { node { code contactDbId createdAt dateFrom dateTo dbId description email employeeGroupDbId modifiedAt glObject1 { code description dbId } employeeGroup { code description } } } } }\"}')}",
+										"type": "Expression"
+									},
+									"requestTimeout": ""
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "[['node']['code']"
+										},
+										"sink": {
+											"name": "code",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['contactDbId']"
+										},
+										"sink": {
+											"name": "_ContactKey",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['createdAt']"
+										},
+										"sink": {
+											"name": "createdAt",
+											"type": "DateTime"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['dateFrom']"
+										},
+										"sink": {
+											"name": "dateFrom",
+											"type": "DateTime"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['dateTo']"
+										},
+										"sink": {
+											"name": "dateTo",
+											"type": "DateTime"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['dbId']"
+										},
+										"sink": {
+											"name": "_EmployeeKey",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['description']"
+										},
+										"sink": {
+											"name": "description",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['email']"
+										},
+										"sink": {
+											"name": "email",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['employeeGroupDbId']"
+										},
+										"sink": {
+											"name": "_EmployeeGroupKey",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['modifiedAt']"
+										},
+										"sink": {
+											"name": "modifiedAt",
+											"type": "DateTime"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['glObject1']['code']"
+										},
+										"sink": {
+											"name": "_CostCenterKey",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['glObject1']['description']"
+										},
+										"sink": {
+											"name": "CostCenterCode",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['glObject1']['dbId']"
+										},
+										"sink": {
+											"name": "CostCenterDescription",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['employeeGroup']['code']"
+										},
+										"sink": {
+											"name": "EmployeeGroupCode",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['employeeGroup']['description']"
+										},
+										"sink": {
+											"name": "EmployeeGroupDescription",
+											"type": "String"
+										}
+									}
+								],
+								"collectionReference": "$['data']['employees']['edges']"
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "JSONEXL",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "stageEmployee",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Get LastLoadDate DimEmployee",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Truncate stageEmployee",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderStoredProcedureName": "[[dbo].[GetLastLoadDate]",
+								"storedProcedureParameters": {
+									"TableName": {
+										"type": "String",
+										"value": "DimEmployee"
+									}
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "stageEmployee",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "Truncate stageEmployee",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "TRUNCATE TABLE stage.Employee"
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-05-19T10:56:40Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/JSONEXL')]",
+				"[concat(variables('factoryId'), '/datasets/stageEmployee')]",
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline4')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "POST",
+									"additionalHeaders": "Content-Type: application/json",
+									"requestBody": "{ \"query\" : \"query { accounts(last: 10000) { edges { node { code description accountGroup { code description levelParent { code description } } } } } }\"}",
+									"requestTimeout": ""
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "[['node']['code']"
+										},
+										"sink": {
+											"name": "code",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['description']"
+										},
+										"sink": {
+											"name": "description",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['accountGroup']['code']"
+										},
+										"sink": {
+											"name": "accountGroupCode",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['accountGroup']['description']"
+										},
+										"sink": {
+											"name": "accountGroupDescription",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['accountGroup']['levelParent']['code']"
+										},
+										"sink": {
+											"name": "accountGroupParentCode",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['accountGroup']['levelParent']['description']"
+										},
+										"sink": {
+											"name": "accountGroupParentDesc",
+											"type": "String"
+										}
+									}
+								],
+								"collectionReference": "$['data']['accounts']['edges']"
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "JSONEXL",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "stageEmployee",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-05-19T10:16:30Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/JSONEXL')]",
+				"[concat(variables('factoryId'), '/datasets/stageEmployee')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/EmployeeLastLoadDate')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/JSONEXL')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "XledgerConn",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "HttpServerLocation"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/XledgerConn')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/stageEmployee')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "stage",
+					"table": "Employee"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Load Xkedger')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureFunction",
+				"typeProperties": {
+					"functionAppUrl": "[parameters('Load Xkedger_properties_typeProperties_functionAppUrl')]",
+					"functionKey": {
+						"type": "SecureString",
+						"value": "[parameters('Load Xkedger_functionKey')]"
+					},
+					"authentication": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SIWIBlobStorage')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('SIWIBlobStorage_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SIWIDBConn')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('SIWIDBConn_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/XledgerConn')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "HttpServer",
+				"typeProperties": {
+					"url": "[parameters('XledgerConn_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous",
+					"authHeaders": {
+						"Authorization": {
+							"type": "SecureString",
+							"value": "**********"
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}

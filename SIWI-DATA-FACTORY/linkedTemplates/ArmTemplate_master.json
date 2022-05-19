@@ -1,0 +1,77 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "SIWI-DATA-FACTORY"
+		},
+		"Load Xkedger_functionKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'functionKey' of 'Load Xkedger'"
+		},
+		"SIWIBlobStorage_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SIWIBlobStorage'"
+		},
+		"SIWIDBConn_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SIWIDBConn'"
+		},
+		"Load Xkedger_properties_typeProperties_functionAppUrl": {
+			"type": "string",
+			"defaultValue": "https://siwibiaf.azurewebsites.net"
+		},
+		"XledgerConn_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://www.xledger.net/graphql"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "SIWI-DATA-FACTORY_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"Load Xkedger_functionKey": {
+						"value": "[parameters('Load Xkedger_functionKey')]"
+					},
+					"SIWIBlobStorage_connectionString": {
+						"value": "[parameters('SIWIBlobStorage_connectionString')]"
+					},
+					"SIWIDBConn_connectionString": {
+						"value": "[parameters('SIWIDBConn_connectionString')]"
+					},
+					"Load Xkedger_properties_typeProperties_functionAppUrl": {
+						"value": "[parameters('Load Xkedger_properties_typeProperties_functionAppUrl')]"
+					},
+					"XledgerConn_properties_typeProperties_url": {
+						"value": "[parameters('XledgerConn_properties_typeProperties_url')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
