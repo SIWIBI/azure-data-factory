@@ -263,8 +263,8 @@
 				}
 			},
 			{
-				"name": "Wait1",
-				"type": "Wait",
+				"name": "Update Exledeger keys",
+				"type": "Script",
 				"dependsOn": [
 					{
 						"activity": "Load stageEmployee",
@@ -273,9 +273,52 @@
 						]
 					}
 				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "UPDATE stage.Employee\nSET _EmployeeKey = 'EXL|' + _EmployeeKey\n\n\nUPDATE stage.Employee\nSET _ContactKey = 'EXL|' + _ContactKey\n\nUPDATE stage.Employee\nSET _CostCenterKey = 'EXL|' + _CostCenterKey\n\nUPDATE stage.Employee\nSET _EmployeeGroupKey = 'EXL|' + _EmployeeGroupKey"
+						}
+					]
+				}
+			},
+			{
+				"name": "Upsert DimEmployee",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Update Exledeger keys",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
-					"waitTimeInSeconds": 1
+					"storedProcedureName": "[dbo].[UpsertDimEmployee]"
+				},
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
 				}
 			}
 		],

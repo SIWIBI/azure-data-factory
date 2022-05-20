@@ -1,0 +1,62 @@
+{
+	"name": "DimEmployee",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SIWIDBConn",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "EmployeeKey",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "_EmployeeKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_EmployeeGroupKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_CostCenterKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "EmployeeCode",
+				"type": "nvarchar"
+			},
+			{
+				"name": "EmployeeName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Email",
+				"type": "nvarchar"
+			},
+			{
+				"name": "EmployeeGroupCode",
+				"type": "nvarchar"
+			},
+			{
+				"name": "EmployeeGroup",
+				"type": "nvarchar"
+			},
+			{
+				"name": "CostCenterCode",
+				"type": "nvarchar"
+			},
+			{
+				"name": "CostCenterDescription",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "DimEmployee"
+		}
+	}
+}
