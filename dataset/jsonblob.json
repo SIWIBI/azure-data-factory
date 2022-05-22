@@ -15,6 +15,59 @@
 				"container": "xledger"
 			}
 		},
-		"schema": {}
+		"schema": {
+			"type": "object",
+			"properties": {
+				"data": {
+					"type": "object",
+					"properties": {
+						"accounts": {
+							"type": "object",
+							"properties": {
+								"edges": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"node": {
+												"type": "object",
+												"properties": {
+													"dbId": {
+														"type": "integer"
+													},
+													"code": {
+														"type": "string"
+													},
+													"description": {
+														"type": "string"
+													},
+													"chartOfAccountDbId": {
+														"type": "integer"
+													},
+													"accountGroupDbId": {
+														"type": "integer"
+													},
+													"modifiedAt": {
+														"type": "string"
+													},
+													"accountGroup": {
+														"type": "object",
+														"properties": {
+															"dbId": {
+																"type": "integer"
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 }
