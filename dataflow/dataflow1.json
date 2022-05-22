@@ -1,0 +1,81 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "jsonblob",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "SIWIDBConn",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          data as (accounts as (edges as (node as (dbId as integer, code as string, description as string, chartOfAccountDbId as integer, accountGroupDbId as integer, modifiedAt as string, accountGroup as (dbId as integer)))[]))",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     documentForm: 'documentPerLine') ~> source1",
+				"source1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          AccountKey as integer,",
+				"          {_AccountKey} as string,",
+				"          {_AccountGroupKey} as string,",
+				"          {_ChartOfAccountKey} as string,",
+				"          {_AccountGroupParentKey} as string,",
+				"          asset as boolean,",
+				"          balanceSheet as boolean,",
+				"          code as string,",
+				"          cost as boolean,",
+				"          createdAt as timestamp,",
+				"          credit as boolean,",
+				"          description as string,",
+				"          equity as boolean,",
+				"          finance as boolean,",
+				"          liabilities as boolean,",
+				"          modifiedAt as timestamp,",
+				"          posting as boolean,",
+				"          revenue as boolean,",
+				"          accountGroupCode as string,",
+				"          accountGroupCreatedAt as timestamp,",
+				"          accountGroupDescription as string,",
+				"          accountGroupParentCode as string,",
+				"          accountGroupParentDesc as string",
+				"     ),",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'stage',",
+				"     tableName: 'Account',",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          {_AccountKey} = data.accounts.edges[1].node.dbId,",
+				"          code = data.accounts.edges[1].node.code,",
+				"          description = data.accounts.edges[1].node.description,",
+				"          {_AccountGroupKey} = data.accounts.edges[1].node.accountGroupDbId,",
+				"          modifiedAt = data.accounts.edges[1].node.modifiedAt",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}
