@@ -1,9 +1,9 @@
 {
-	"name": "pipeline3",
+	"name": "pipeAccountGroup",
 	"properties": {
 		"activities": [
 			{
-				"name": "Truncate stageAccount",
+				"name": "Truncate stageAccountGroup",
 				"type": "Script",
 				"dependsOn": [],
 				"policy": {
@@ -22,17 +22,17 @@
 					"scripts": [
 						{
 							"type": "Query",
-							"text": "TRUNCATE TABLE stage.Account"
+							"text": "TRUNCATE TABLE stage.AccountGroup"
 						}
 					]
 				}
 			},
 			{
-				"name": "Get LastLoadDate DimAccount",
+				"name": "Get LastLoadDate DimAccountGroup",
 				"type": "Lookup",
 				"dependsOn": [
 					{
-						"activity": "Truncate stageAccount",
+						"activity": "Truncate stageAccountGroup",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -53,7 +53,7 @@
 						"storedProcedureParameters": {
 							"TableName": {
 								"type": "String",
-								"value": "DimAccount"
+								"value": "DimAccountGroup"
 							}
 						},
 						"queryTimeout": "02:00:00",
@@ -66,11 +66,11 @@
 				}
 			},
 			{
-				"name": "Load stageAccount",
+				"name": "Load stageAccountGroup",
 				"type": "Copy",
 				"dependsOn": [
 					{
-						"activity": "Get LastLoadDate DimAccount",
+						"activity": "Get LastLoadDate DimAccountGroup",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -92,7 +92,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: application/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query {\n  accounts(last: 10000, filter: {modifiedAt_gt:\\\"',activity('Get LastLoadDate DimAccount').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        asset\n        balanceSheet\n        code\n        cost\n        credit\n        dbId\n        description\n        equity\n        finance\n        liabilities\n        modifiedAt\n        posting\n        revenue\n        accountGroupDbId\n      }\n    }\n  }\n}\"}')}",
+								"value": "@{concat('{ \"query\" : \"query {  objectValues(first: 3000, filter: {modifiedAt_gt:\\\"',activity('Get LastLoadDate DimAccountGroup').output.firstrow.LastLoadDate,'\\\" definitionId:879}) { edges { node { code description dbId } } } } \"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
@@ -112,55 +112,10 @@
 						"mappings": [
 							{
 								"source": {
-									"path": "['node']['asset']"
-								},
-								"sink": {
-									"name": "asset",
-									"type": "Boolean"
-								}
-							},
-							{
-								"source": {
-									"path": "['node']['balanceSheet']"
-								},
-								"sink": {
-									"name": "balanceSheet",
-									"type": "Boolean"
-								}
-							},
-							{
-								"source": {
 									"path": "['node']['code']"
 								},
 								"sink": {
 									"name": "code",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "['node']['cost']"
-								},
-								"sink": {
-									"name": "cost",
-									"type": "Boolean"
-								}
-							},
-							{
-								"source": {
-									"path": "['node']['credit']"
-								},
-								"sink": {
-									"name": "credit",
-									"type": "Boolean"
-								}
-							},
-							{
-								"source": {
-									"path": "['node']['dbId']"
-								},
-								"sink": {
-									"name": "_AccountKey",
 									"type": "String"
 								}
 							},
@@ -175,61 +130,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['equity']"
-								},
-								"sink": {
-									"name": "equity",
-									"type": "Boolean"
-								}
-							},
-							{
-								"source": {
-									"path": "['node']['finance']"
-								},
-								"sink": {
-									"name": "finance",
-									"type": "Boolean"
-								}
-							},
-							{
-								"source": {
-									"path": "['node']['liabilities']"
-								},
-								"sink": {
-									"name": "liabilities",
-									"type": "Boolean"
-								}
-							},
-							{
-								"source": {
-									"path": "['node']['modifiedAt']"
-								},
-								"sink": {
-									"name": "modifiedAt",
-									"type": "DateTime"
-								}
-							},
-							{
-								"source": {
-									"path": "['node']['posting']"
-								},
-								"sink": {
-									"name": "posting",
-									"type": "Boolean"
-								}
-							},
-							{
-								"source": {
-									"path": "['node']['revenue']"
-								},
-								"sink": {
-									"name": "revenue",
-									"type": "Boolean"
-								}
-							},
-							{
-								"source": {
-									"path": "['node']['accountGroupDbId']"
+									"path": "['node']['dbId']"
 								},
 								"sink": {
 									"name": "_AccountGroupKey",
@@ -237,7 +138,7 @@
 								}
 							}
 						],
-						"collectionReference": "$['data']['accounts']['edges']"
+						"collectionReference": "$['data']['objectValues']['edges']"
 					}
 				},
 				"inputs": [
@@ -248,17 +149,17 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "dsStageAccount",
+						"referenceName": "dsStageAccountGroup",
 						"type": "DatasetReference"
 					}
 				]
 			},
 			{
-				"name": "Update Exledger Keys",
+				"name": "Update Exledger keys",
 				"type": "Script",
 				"dependsOn": [
 					{
-						"activity": "Load stageAccount",
+						"activity": "Load stageAccountGroup",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -280,9 +181,69 @@
 					"scripts": [
 						{
 							"type": "Query",
-							"text": "UPDATE stage.Account\nSET _AccountKey = 'EXL|' + _AccountKey\n, _AccountGroupKey = 'EXL|' + _AccountGroupKey"
+							"text": "UPDATE stage.AccountGroup\nSET _AccountGroupKey = 'EXL|' + _AccountGroupKey"
 						}
 					]
+				}
+			},
+			{
+				"name": "Upsert DimAccountGroup",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Update Exledger keys",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[UpsertDimAccountGroup]"
+				},
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Update LastLoadDate",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Upsert DimAccountGroup",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[UpdateLastLoadDate]",
+					"storedProcedureParameters": {
+						"TableName": {
+							"value": "DimAccountGroup",
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
 				}
 			}
 		],

@@ -1,0 +1,34 @@
+{
+	"name": "dsDimEmployeeGroup",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SIWIDBConn",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "EmployeeGroupKey",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "_EmployeeGroupKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "EmployeeGroupCode",
+				"type": "nvarchar"
+			},
+			{
+				"name": "EmployeeGroup",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "DimEmployeeGroup"
+		}
+	}
+}
