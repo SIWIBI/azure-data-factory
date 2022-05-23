@@ -1,5 +1,5 @@
 {
-	"name": "pipeline1",
+	"name": "pipeAccountGroup",
 	"properties": {
 		"activities": [
 			{
@@ -26,6 +26,132 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "Get LastLoadDate DimAccountGroup",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Truncate stageAccountGroup",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[dbo].[GetLastLoadDate]",
+						"storedProcedureParameters": {
+							"TableName": {
+								"type": "String",
+								"value": "DimAccountGroup"
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "dsLastLoadDate",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "Load stageAccountGroup",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Get LastLoadDate DimAccountGroup",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "POST",
+							"additionalHeaders": "Content-Type: application/json",
+							"requestBody": {
+								"value": "@{concat('{ \"query\" : \"query {  objectValues(first: 3000, filter: {modifiedAt_gt:\\\"',activity('Get LastLoadDate DimAccountGroup').output.firstrow.LastLoadDate,'\\\" definitionId:879}) { edges { node { code description dbId } } } } \"}')}",
+								"type": "Expression"
+							},
+							"requestTimeout": ""
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "$['data']['objectValues']['edges'][0]['node']['code']"
+								},
+								"sink": {
+									"name": "code",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['data']['objectValues']['edges'][0]['node']['description']"
+								},
+								"sink": {
+									"name": "description",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['data']['objectValues']['edges'][0]['node']['dbId']"
+								},
+								"sink": {
+									"name": "_AccountGroupKey",
+									"type": "String"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "JSONEXL",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "dsStageAccountGroup",
+						"type": "DatasetReference"
+					}
+				]
 			}
 		],
 		"annotations": []
