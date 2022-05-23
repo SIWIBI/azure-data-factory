@@ -3,31 +3,6 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Truncate stageEmployeeGroup",
-				"type": "Script",
-				"dependsOn": [],
-				"policy": {
-					"timeout": "7.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"linkedServiceName": {
-					"referenceName": "SIWIDBConn",
-					"type": "LinkedServiceReference"
-				},
-				"typeProperties": {
-					"scripts": [
-						{
-							"type": "Query",
-							"text": "TRUNCATE TABLE stage.EmployeeGroup"
-						}
-					]
-				}
-			},
-			{
 				"name": "Get LastLoadDate DimEmployeeGroup",
 				"type": "Lookup",
 				"dependsOn": [
@@ -92,7 +67,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: application/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query { employeeGroups(last: 100, filter: {modifiedAt_gt: \\\"',activity('Get LastLoadDate DimEmployeeGroup').output.firstrow.LastLoadDate,'\\\"}) { edges { node { code createdAt dbId description modifiedAt } } } \"}')}",
+								"value": "@{concat('{ \"query\" : \"query { employeeGroups(last: 100, filter: {modifiedAt_gt: \\\"',activity('Get LastLoadDate DimEmployeeGroup').output.firstrow.LastLoadDate,'\\\"}) { edges { node { code createdAt dbId description modifiedAt } } } } \"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
@@ -104,7 +79,8 @@
 					"sink": {
 						"type": "AzureSqlSink",
 						"writeBehavior": "insert",
-						"sqlWriterUseTableLock": false
+						"sqlWriterUseTableLock": false,
+						"disableMetricsCollection": false
 					},
 					"enableStaging": false,
 					"translator": {
@@ -112,20 +88,52 @@
 						"mappings": [
 							{
 								"source": {
-									"path": "$['errors'][0]['message']"
+									"path": "['node']['code']"
+								},
+								"sink": {
+									"name": "code",
+									"type": "String"
 								}
 							},
 							{
 								"source": {
-									"path": "$['errors'][0]['extensions']['line']"
+									"path": "['node']['createdAt']"
+								},
+								"sink": {
+									"name": "createdAt",
+									"type": "DateTime"
 								}
 							},
 							{
 								"source": {
-									"path": "$['errors'][0]['extensions']['column']"
+									"path": "['node']['dbId']"
+								},
+								"sink": {
+									"name": "_EmployeeGroupKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['description']"
+								},
+								"sink": {
+									"name": "description",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['modifiedAt']"
+								},
+								"sink": {
+									"name": "modifiedAt",
+									"type": "DateTime"
 								}
 							}
-						]
+						],
+						"collectionReference": "$['data']['employeeGroups']['edges']",
+						"mapComplexValuesToString": false
 					}
 				},
 				"inputs": [
@@ -140,6 +148,63 @@
 						"type": "DatasetReference"
 					}
 				]
+			},
+			{
+				"name": "Truncate stageEmployeeGroup",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "TRUNCATE TABLE stage.EmployeeGroup"
+						}
+					]
+				}
+			},
+			{
+				"name": "Update Exledger keys",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Load stageEmployeeGroup",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "UPDATE stage.EmployeeGroup\nSET _EmployeeGroupKey = 'EXL|' + _EmployeeGroupKey"
+						}
+					]
+				}
 			}
 		],
 		"annotations": []
