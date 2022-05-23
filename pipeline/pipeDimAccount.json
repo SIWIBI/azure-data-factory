@@ -1,5 +1,5 @@
 {
-	"name": "pipeline3",
+	"name": "pipeDimAccount",
 	"properties": {
 		"activities": [
 			{
@@ -92,7 +92,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: application/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query {\n  accounts(last: 10000, filter: {modifiedAt_gt:\\\"',activity('Get LastLoadDate DimAccount').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        asset\n        balanceSheet\n        code\n        cost\n        credit\n        dbId\n        description\n        equity\n        finance\n        liabilities\n        modifiedAt\n        posting\n        revenue\n        accountGroupDbId\n      }\n    }\n  }\n}\"}')}",
+								"value": "@{concat('{ \"query\" : \"query {\n  accounts(last: 10000, filter: {modifiedAt_gt: \\\"',activity('Get LastLoadDate DimAccount').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        asset\n        balanceSheet\n        code\n        cost\n        credit\n        dbId\n        description\n        equity\n        finance\n        liabilities\n        modifiedAt\n        posting\n        revenue\n        accountGroupDbId\n        accountGroup {\n          dbId\n          code\n          description\n        }\n      }\n    }\n  }\n}\"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
@@ -229,10 +229,28 @@
 							},
 							{
 								"source": {
-									"path": "['node']['accountGroupDbId']"
+									"path": "['node']['accountGroup']['dbId']"
 								},
 								"sink": {
 									"name": "_AccountGroupKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['accountGroup']['code']"
+								},
+								"sink": {
+									"name": "AccountGroupCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['accountGroup']['description']"
+								},
+								"sink": {
+									"name": "AccountGroupDescription",
 									"type": "String"
 								}
 							}
@@ -283,6 +301,66 @@
 							"text": "UPDATE stage.Account\nSET _AccountKey = 'EXL|' + _AccountKey\n, _AccountGroupKey = 'EXL|' + _AccountGroupKey"
 						}
 					]
+				}
+			},
+			{
+				"name": "Upsert DimAccount",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Update Exledger Keys",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[UpsertDimAccount]"
+				},
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Update LastLoadDate",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Upsert DimAccount",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[UpdateLastLoadDate]",
+					"storedProcedureParameters": {
+						"TableName": {
+							"value": "DimAccount",
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
 				}
 			}
 		],
