@@ -1,0 +1,21 @@
+{
+	"name": "pipeRunEmAll",
+	"properties": {
+		"activities": [
+			{
+				"name": "Load all dimensions",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pipeLoadAllDimensions",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"annotations": []
+	}
+}
