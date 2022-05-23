@@ -40,7 +40,7 @@
 					},
 					"sink": {
 						"type": "AzureSqlSink",
-						"preCopyScript": "TRUNCATE TABLE stage.Employe",
+						"preCopyScript": "TRUNCATE TABLE stage.Employee",
 						"writeBehavior": "insert",
 						"sqlWriterUseTableLock": false,
 						"disableMetricsCollection": false
