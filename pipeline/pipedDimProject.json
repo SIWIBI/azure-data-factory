@@ -52,7 +52,8 @@
 						"sqlReaderStoredProcedureName": "[dbo].[GetLastLoadDate]",
 						"storedProcedureParameters": {
 							"TableName": {
-								"type": "String"
+								"type": "String",
+								"value": "DimProject"
 							}
 						},
 						"queryTimeout": "02:00:00",
@@ -312,7 +313,7 @@
 									"path": "$['data']['projects']['edges'][0]['node']['projectGroup']['code']"
 								},
 								"sink": {
-									"name": "code",
+									"name": "projectGroupCode",
 									"type": "String"
 								}
 							},
@@ -330,7 +331,7 @@
 									"path": "$['data']['projects']['edges'][0]['node']['projectGroup']['description']"
 								},
 								"sink": {
-									"name": "description",
+									"name": "projectGroupDescription",
 									"type": "String"
 								}
 							},
@@ -339,7 +340,7 @@
 									"path": "$['data']['projects']['edges'][0]['node']['glObject2']['code']"
 								},
 								"sink": {
-									"name": "code",
+									"name": "glObject2Code",
 									"type": "String"
 								}
 							},
