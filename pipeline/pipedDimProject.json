@@ -92,7 +92,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: application/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query {\n  projects(last: 10000, filter:{modifiedAt_gte:\\\"',activity('Get LastLoadDate DimProject').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        accessControl\n        activity\n        billable\n        code\n        createdAt\n        dbId\n        description\n        email\n        fromDate\n        fundProject\n        modifiedAt\n        shortInfo\n        shortInternalInfo\n        text\n        timesheetEntry\n        toDate\n        totalCost\n        totalEstimateHours\n        totalRevenue\n        yearlyCost\n        yearlyEstimateHours\n        yearlyRevenue\n        projectGroup {\n          code\n          dbId\n          description\n        }\n        glObject2 {\n          code\n          dbId\n          description\n        }\n        mainProjectDbId\n        mainProject {\n          code\n          description\n        }\n      }\n    }\n  }\n}\"}')}",
+								"value": "@{concat('{ \"query\" : \"query {\n  projects(last: 10000, filter: {modifiedAt_gte: \\\"2000-01-01\\\", dbId: 24287896}) {\n    edges {\n      node {\n        accessControl\n        activity\n        billable\n        code\n        createdAt\n        dbId\n        description\n        email\n        fromDate\n        fundProject\n        modifiedAt\n        shortInfo\n        shortInternalInfo\n        text\n        timesheetEntry\n        toDate\n        totalCost\n        totalEstimateHours\n        totalRevenue\n        yearlyCost\n        yearlyEstimateHours\n        yearlyRevenue\n        projectGroup {\n          code\n          dbId\n          description\n        }\n        glObject2 {\n          code\n          dbId\n          description\n        }\n        mainProjectDbId\n        mainProject {\n          code\n          description\n        }\n      }\n    }\n  }\n}\n\"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
@@ -112,7 +112,7 @@
 						"mappings": [
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['accessControl']"
+									"path": "['node']['accessControl']"
 								},
 								"sink": {
 									"name": "accessControl",
@@ -121,7 +121,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['activity']"
+									"path": "['node']['activity']"
 								},
 								"sink": {
 									"name": "activity",
@@ -130,7 +130,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['billable']"
+									"path": "['node']['billable']"
 								},
 								"sink": {
 									"name": "billable",
@@ -139,7 +139,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['code']"
+									"path": "['node']['code']"
 								},
 								"sink": {
 									"name": "code",
@@ -148,7 +148,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['createdAt']"
+									"path": "['node']['createdAt']"
 								},
 								"sink": {
 									"name": "createdAt",
@@ -157,7 +157,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['dbId']"
+									"path": "['node']['dbId']"
 								},
 								"sink": {
 									"name": "_ProjectKey",
@@ -166,7 +166,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['description']"
+									"path": "['node']['description']"
 								},
 								"sink": {
 									"name": "description",
@@ -175,7 +175,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['email']"
+									"path": "['node']['email']"
 								},
 								"sink": {
 									"name": "email",
@@ -184,7 +184,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['fromDate']"
+									"path": "['node']['fromDate']"
 								},
 								"sink": {
 									"name": "fromDate",
@@ -193,7 +193,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['fundProject']"
+									"path": "['node']['fundProject']"
 								},
 								"sink": {
 									"name": "fundProject",
@@ -202,7 +202,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['modifiedAt']"
+									"path": "['node']['modifiedAt']"
 								},
 								"sink": {
 									"name": "modifiedAt",
@@ -211,7 +211,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['shortInfo']"
+									"path": "['node']['shortInfo']"
 								},
 								"sink": {
 									"name": "shortInfo",
@@ -220,7 +220,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['shortInternalInfo']"
+									"path": "['node']['shortInternalInfo']"
 								},
 								"sink": {
 									"name": "shortInternalInfo",
@@ -229,7 +229,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['text']"
+									"path": "['node']['text']"
 								},
 								"sink": {
 									"name": "text",
@@ -238,7 +238,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['timesheetEntry']"
+									"path": "['node']['timesheetEntry']"
 								},
 								"sink": {
 									"name": "timesheetEntry",
@@ -247,7 +247,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['toDate']"
+									"path": "['node']['toDate']"
 								},
 								"sink": {
 									"name": "toDate",
@@ -256,7 +256,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['totalCost']"
+									"path": "['node']['totalCost']"
 								},
 								"sink": {
 									"name": "totalCost",
@@ -265,7 +265,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['totalEstimateHours']"
+									"path": "['node']['totalEstimateHours']"
 								},
 								"sink": {
 									"name": "totalEstimateHours",
@@ -274,7 +274,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['totalRevenue']"
+									"path": "['node']['totalRevenue']"
 								},
 								"sink": {
 									"name": "totalRevenue",
@@ -283,7 +283,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['yearlyCost']"
+									"path": "['node']['yearlyCost']"
 								},
 								"sink": {
 									"name": "yearlyCost",
@@ -292,7 +292,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['yearlyEstimateHours']"
+									"path": "['node']['yearlyEstimateHours']"
 								},
 								"sink": {
 									"name": "yearlyEstimateHours",
@@ -301,7 +301,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['yearlyRevenue']"
+									"path": "['node']['yearlyRevenue']"
 								},
 								"sink": {
 									"name": "yearlyRevenue",
@@ -310,7 +310,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['projectGroup']['code']"
+									"path": "['node']['projectGroup']['code']"
 								},
 								"sink": {
 									"name": "projectGroupCode",
@@ -319,7 +319,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['projectGroup']['dbId']"
+									"path": "['node']['projectGroup']['dbId']"
 								},
 								"sink": {
 									"name": "_ProjectGroupKey",
@@ -328,7 +328,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['projectGroup']['description']"
+									"path": "['node']['projectGroup']['description']"
 								},
 								"sink": {
 									"name": "projectGroupDescription",
@@ -337,7 +337,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['glObject2']['code']"
+									"path": "['node']['glObject2']['code']"
 								},
 								"sink": {
 									"name": "glObject2Code",
@@ -346,25 +346,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['glObject2']['dbId']"
-								},
-								"sink": {
-									"name": "glObject2Code",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['glObject2']['description']"
-								},
-								"sink": {
-									"name": "glObject2Description",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['mainProjectDbId']"
+									"path": "['node']['glObject2']['dbId']"
 								},
 								"sink": {
 									"name": "_CostCenterKey",
@@ -373,10 +355,37 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['projects']['edges'][0]['node']['mainProject']"
+									"path": "['node']['glObject2']['description']"
+								},
+								"sink": {
+									"name": "glObject2Description",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['mainProjectDbId']"
 								},
 								"sink": {
 									"name": "_MainProjectKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['mainProject']['code']"
+								},
+								"sink": {
+									"name": "mainProjectCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['mainProject']['description']"
+								},
+								"sink": {
+									"name": "mainProjectDescription",
 									"type": "String"
 								}
 							}
