@@ -26,6 +26,225 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "Get LastLoadDate DimActivity",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Truncate stageAcitivty",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[dbo].[GetLastLoadDate]",
+						"storedProcedureParameters": {
+							"TableName": {
+								"type": "String",
+								"value": "DimActivity"
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "dsLastLoadDate",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "Load stageActivity",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Get LastLoadDate DimActivity",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "POST",
+							"additionalHeaders": "Content-Type: application/json",
+							"requestBody": {
+								"value": "@{concat('{ \"query\" : \"query {\n  objectValues(first: 10000, filter: {definitionId:993, modifiedAt_gt:\\\"',activity('Get LastLoadDate DimActivity').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        code\n        description\n        dbId\n      }\n    }\n  }\n}\"}')}",
+								"type": "Expression"
+							},
+							"requestTimeout": ""
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "['node']['code']"
+								},
+								"sink": {
+									"name": "code",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['description']"
+								},
+								"sink": {
+									"name": "description",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['dbId']"
+								},
+								"sink": {
+									"name": "_ActivityKey",
+									"type": "String"
+								}
+							}
+						],
+						"collectionReference": "$['data']['objectValues']['edges']"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "JSONEXL",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "dsStageActivity",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Update Xledger keys",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Load stageActivity",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "UPDATE stage.Activity\nSET _ActivityKey = 'EXL|' + _ActivityKey"
+						}
+					]
+				}
+			},
+			{
+				"name": "Upsert DimActivity",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Update Xledger keys",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[UpsertDimActivity]"
+				},
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Update LastLoadDate",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Upsert DimActivity",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[UpdateLastLoadDate]",
+					"storedProcedureParameters": {
+						"TableName": {
+							"value": "DimActivity",
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				}
 			}
 		],
 		"annotations": []
