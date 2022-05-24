@@ -1,5 +1,5 @@
 {
-	"name": "pipeline1",
+	"name": "pipeProjectGroup",
 	"properties": {
 		"activities": [
 			{
@@ -115,7 +115,16 @@
 									"path": "$['data']['objectValues']['edges'][0]['node']['code']"
 								},
 								"sink": {
-									"name": "Code",
+									"name": "code",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['data']['objectValues']['edges'][0]['node']['description']"
+								},
+								"sink": {
+									"name": "description",
 									"type": "String"
 								}
 							},
@@ -125,15 +134,6 @@
 								},
 								"sink": {
 									"name": "_ProjectGroupKey",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "$['data']['objectValues']['edges'][0]['node']['description']"
-								},
-								"sink": {
-									"name": "ProjectGroup",
 									"type": "String"
 								}
 							}
