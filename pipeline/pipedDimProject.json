@@ -92,7 +92,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: application/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query {\n  projects(last: 10000, filter: {modifiedAt_gte: \\\"2000-01-01\\\", dbId: 24287896}) {\n    edges {\n      node {\n        accessControl\n        activity\n        billable\n        code\n        createdAt\n        dbId\n        description\n        email\n        fromDate\n        fundProject\n        modifiedAt\n        shortInfo\n        shortInternalInfo\n        text\n        timesheetEntry\n        toDate\n        totalCost\n        totalEstimateHours\n        totalRevenue\n        yearlyCost\n        yearlyEstimateHours\n        yearlyRevenue\n        projectGroup {\n          code\n          dbId\n          description\n        }\n        glObject2 {\n          code\n          dbId\n          description\n        }\n        mainProjectDbId\n        mainProject {\n          code\n          description\n        }\n      }\n    }\n  }\n}\n\"}')}",
+								"value": "@{concat('{ \"query\" : \"query {\n  projects(last: 10000, filter: {modifiedAt_gte: \\\"',activity('Get LastLoadDate DimProject').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        accessControl\n        activity\n        billable\n        code\n        createdAt\n        dbId\n        description\n        email\n        fromDate\n        fundProject\n        modifiedAt\n        shortInfo\n        shortInternalInfo\n        text\n        timesheetEntry\n        toDate\n        totalCost\n        totalEstimateHours\n        totalRevenue\n        yearlyCost\n        yearlyEstimateHours\n        yearlyRevenue\n        projectGroup {\n          code\n          dbId\n          description\n        }\n        glObject2 {\n          code\n          dbId\n          description\n        }\n        mainProjectDbId\n        mainProject {\n          code\n          description\n        }\n      }\n    }\n  }\n}\n\"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
@@ -232,7 +232,7 @@
 									"path": "['node']['text']"
 								},
 								"sink": {
-									"name": "text",
+									"name": "ptext",
 									"type": "String"
 								}
 							},
@@ -332,60 +332,6 @@
 								},
 								"sink": {
 									"name": "projectGroupDescription",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "['node']['glObject2']['code']"
-								},
-								"sink": {
-									"name": "glObject2Code",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "['node']['glObject2']['dbId']"
-								},
-								"sink": {
-									"name": "_CostCenterKey",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "['node']['glObject2']['description']"
-								},
-								"sink": {
-									"name": "glObject2Description",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "['node']['mainProjectDbId']"
-								},
-								"sink": {
-									"name": "_MainProjectKey",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "['node']['mainProject']['code']"
-								},
-								"sink": {
-									"name": "mainProjectCode",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "['node']['mainProject']['description']"
-								},
-								"sink": {
-									"name": "mainProjectDescription",
 									"type": "String"
 								}
 							}
