@@ -1,0 +1,34 @@
+{
+	"name": "dsStageProjectGroup",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SIWIDBConn",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ProjectGroupKey",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "_ProjectGroupKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Code",
+				"type": "nvarchar"
+			},
+			{
+				"name": "ProjectGroup",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "DimProjectGroup"
+		}
+	}
+}
