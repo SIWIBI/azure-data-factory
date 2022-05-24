@@ -30,7 +30,14 @@
 			{
 				"name": "Get LastLoadDate DimActivity",
 				"type": "Lookup",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Truncate stageAcitivty",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "7.00:00:00",
 					"retry": 0,
@@ -105,7 +112,7 @@
 						"mappings": [
 							{
 								"source": {
-									"path": "$['data']['objectValues']['edges'][0]['node']['code']"
+									"path": "['node']['code']"
 								},
 								"sink": {
 									"name": "code",
@@ -114,7 +121,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['objectValues']['edges'][0]['node']['description']"
+									"path": "['node']['description']"
 								},
 								"sink": {
 									"name": "description",
@@ -123,7 +130,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['objectValues']['edges'][0]['node']['dbId']"
+									"path": "['node']['dbId']"
 								},
 								"sink": {
 									"name": "_ActivityKey",
@@ -146,6 +153,98 @@
 						"type": "DatasetReference"
 					}
 				]
+			},
+			{
+				"name": "Update Xledger keys",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Load stageActivity",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "UPDATE stage.Activity\nSET _ActivityKey = 'EXL|' + _ActivityKey"
+						}
+					]
+				}
+			},
+			{
+				"name": "Upsert DimActivity",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Update Xledger keys",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[UpsertDimActivity]"
+				},
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Update LastLoadDate",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Upsert DimActivity",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[UpdateLastLoadDate]",
+					"storedProcedureParameters": {
+						"TableName": {
+							"value": "DimActivity",
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				}
 			}
 		],
 		"annotations": []
