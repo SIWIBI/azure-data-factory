@@ -1,0 +1,158 @@
+{
+	"name": "dsStageProject",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SIWIDBConn",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ProjectKey",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "_ProjectKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_MainProjectKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_ProjectGroupKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_CostCenterKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "accessControl",
+				"type": "bit"
+			},
+			{
+				"name": "activity",
+				"type": "bit"
+			},
+			{
+				"name": "billable",
+				"type": "bit"
+			},
+			{
+				"name": "code",
+				"type": "nvarchar"
+			},
+			{
+				"name": "createdAt",
+				"type": "date"
+			},
+			{
+				"name": "description",
+				"type": "nvarchar"
+			},
+			{
+				"name": "email",
+				"type": "nvarchar"
+			},
+			{
+				"name": "fromDate",
+				"type": "date"
+			},
+			{
+				"name": "fundProject",
+				"type": "bit"
+			},
+			{
+				"name": "modifiedAt",
+				"type": "date"
+			},
+			{
+				"name": "shortInfo",
+				"type": "nvarchar"
+			},
+			{
+				"name": "shortInternalInfo",
+				"type": "nvarchar"
+			},
+			{
+				"name": "text",
+				"type": "nvarchar"
+			},
+			{
+				"name": "timesheetEntry",
+				"type": "bit"
+			},
+			{
+				"name": "toDate",
+				"type": "date"
+			},
+			{
+				"name": "totalCost",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "totalEstimateHours",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "totalRevenue",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "yearlyCost",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "yearlyEstimateHours",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "yearlyRevenue",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "projectGroupCode",
+				"type": "nvarchar"
+			},
+			{
+				"name": "projectGroupDescription",
+				"type": "nvarchar"
+			},
+			{
+				"name": "glObject2Code",
+				"type": "nvarchar"
+			},
+			{
+				"name": "glObject2Description",
+				"type": "nvarchar"
+			},
+			{
+				"name": "mainProjectCode",
+				"type": "nvarchar"
+			},
+			{
+				"name": "mainProjectDescription",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "stage",
+			"table": "Project"
+		}
+	}
+}
