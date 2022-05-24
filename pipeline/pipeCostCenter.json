@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Trucate stageCostCenter",
+				"name": "Truncate stageCostCenter",
 				"type": "Script",
 				"dependsOn": [],
 				"policy": {
@@ -32,7 +32,7 @@
 				"type": "Lookup",
 				"dependsOn": [
 					{
-						"activity": "Trucate stageCostCenter",
+						"activity": "Truncate stageCostCenter",
 						"dependencyConditions": [
 							"Succeeded"
 						]
