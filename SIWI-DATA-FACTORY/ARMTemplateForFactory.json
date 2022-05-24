@@ -33,7 +33,1192 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/pipeline3')]",
+			"name": "[concat(parameters('factoryName'), '/pipeAccountGroup')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Truncate stageAccountGroup",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "TRUNCATE TABLE stage.AccountGroup"
+								}
+							]
+						}
+					},
+					{
+						"name": "Get LastLoadDate DimAccountGroup",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Truncate stageAccountGroup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderStoredProcedureName": "[[dbo].[GetLastLoadDate]",
+								"storedProcedureParameters": {
+									"TableName": {
+										"type": "String",
+										"value": "DimAccountGroup"
+									}
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "dsLastLoadDate",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "Load stageAccountGroup",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Get LastLoadDate DimAccountGroup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "POST",
+									"additionalHeaders": "Content-Type: application/json",
+									"requestBody": {
+										"value": "@{concat('{ \"query\" : \"query {  objectValues(first: 3000, filter: {modifiedAt_gt:\\\"',activity('Get LastLoadDate DimAccountGroup').output.firstrow.LastLoadDate,'\\\" definitionId:879}) { edges { node { code description dbId } } } } \"}')}",
+										"type": "Expression"
+									},
+									"requestTimeout": ""
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "[['node']['code']"
+										},
+										"sink": {
+											"name": "code",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['description']"
+										},
+										"sink": {
+											"name": "description",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['dbId']"
+										},
+										"sink": {
+											"name": "_AccountGroupKey",
+											"type": "String"
+										}
+									}
+								],
+								"collectionReference": "$['data']['objectValues']['edges']"
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "JSONEXL",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "dsStageAccountGroup",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Update Exledger keys",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "Load stageAccountGroup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "UPDATE stage.AccountGroup\nSET _AccountGroupKey = 'EXL|' + _AccountGroupKey"
+								}
+							]
+						}
+					},
+					{
+						"name": "Upsert DimAccountGroup",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Update Exledger keys",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpsertDimAccountGroup]"
+						},
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Update LastLoadDate",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Upsert DimAccountGroup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpdateLastLoadDate]",
+							"storedProcedureParameters": {
+								"TableName": {
+									"value": "DimAccountGroup",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]",
+				"[concat(variables('factoryId'), '/datasets/dsLastLoadDate')]",
+				"[concat(variables('factoryId'), '/datasets/JSONEXL')]",
+				"[concat(variables('factoryId'), '/datasets/dsStageAccountGroup')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeCostCenter')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Truncate stageCostCenter",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "TRUNCATE TABLE stage.CostCenter"
+								}
+							]
+						}
+					},
+					{
+						"name": "Get LastLoadDate DimCostCenter",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Truncate stageCostCenter",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderStoredProcedureName": "[[dbo].[GetLastLoadDate]",
+								"storedProcedureParameters": {
+									"TableName": {
+										"type": "String",
+										"value": "DimCostCenter"
+									}
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "dsLastLoadDate",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "Load stageCostCenter",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Get LastLoadDate DimCostCenter",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "POST",
+									"additionalHeaders": "Content-Type: application/json",
+									"requestBody": {
+										"value": "@{concat('{ \"query\" : \"query {\n  objectValues(first: 100, filter: {definitionId:41, modifiedAt_gt:\\\"',activity('Get LastLoadDate DimCostCenter').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        code\n        description\n        dbId\n      }\n    }\n  }\n}\"}')}",
+										"type": "Expression"
+									},
+									"requestTimeout": ""
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "[['node']['code']"
+										},
+										"sink": {
+											"name": "code",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['description']"
+										},
+										"sink": {
+											"name": "description",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['dbId']"
+										},
+										"sink": {
+											"name": "_CostCenterKey",
+											"type": "String"
+										}
+									}
+								],
+								"collectionReference": "$['data']['objectValues']['edges']"
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "JSONEXL",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "dsStageCostCenter",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Update Exledger",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "Load stageCostCenter",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "UPDATE stage.CostCenter \nSET _CostCenterKey = 'EXL|' + _CostCenterKey"
+								}
+							]
+						}
+					},
+					{
+						"name": "Upsert CostCenter",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Update Exledger",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpsertCostCenter]"
+						},
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Update GetLastLoadDate",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Upsert CostCenter",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpdateLastLoadDate]",
+							"storedProcedureParameters": {
+								"TableName": {
+									"value": "DimCostCenter",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]",
+				"[concat(variables('factoryId'), '/datasets/dsLastLoadDate')]",
+				"[concat(variables('factoryId'), '/datasets/JSONEXL')]",
+				"[concat(variables('factoryId'), '/datasets/dsStageCostCenter')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeDimAccount')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Truncate stageAccount",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "TRUNCATE TABLE stage.Account"
+								}
+							]
+						}
+					},
+					{
+						"name": "Get LastLoadDate DimAccount",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Truncate stageAccount",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderStoredProcedureName": "[[dbo].[GetLastLoadDate]",
+								"storedProcedureParameters": {
+									"TableName": {
+										"type": "String",
+										"value": "DimAccount"
+									}
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "dsLastLoadDate",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "Load stageAccount",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Get LastLoadDate DimAccount",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "POST",
+									"additionalHeaders": "Content-Type: application/json",
+									"requestBody": {
+										"value": "@{concat('{ \"query\" : \"query {\n  accounts(last: 10000, filter: {modifiedAt_gt: \\\"',activity('Get LastLoadDate DimAccount').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        asset\n        balanceSheet\n        code\n        cost\n        credit\n        dbId\n        description\n        equity\n        finance\n        liabilities\n        modifiedAt\n        posting\n        revenue\n        accountGroupDbId\n        accountGroup {\n          dbId\n          code\n          description\n        }\n      }\n    }\n  }\n}\"}')}",
+										"type": "Expression"
+									},
+									"requestTimeout": ""
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "[['node']['asset']"
+										},
+										"sink": {
+											"name": "asset",
+											"type": "Boolean"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['balanceSheet']"
+										},
+										"sink": {
+											"name": "balanceSheet",
+											"type": "Boolean"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['code']"
+										},
+										"sink": {
+											"name": "code",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['cost']"
+										},
+										"sink": {
+											"name": "cost",
+											"type": "Boolean"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['credit']"
+										},
+										"sink": {
+											"name": "credit",
+											"type": "Boolean"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['dbId']"
+										},
+										"sink": {
+											"name": "_AccountKey",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['description']"
+										},
+										"sink": {
+											"name": "description",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['equity']"
+										},
+										"sink": {
+											"name": "equity",
+											"type": "Boolean"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['finance']"
+										},
+										"sink": {
+											"name": "finance",
+											"type": "Boolean"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['liabilities']"
+										},
+										"sink": {
+											"name": "liabilities",
+											"type": "Boolean"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['modifiedAt']"
+										},
+										"sink": {
+											"name": "modifiedAt",
+											"type": "DateTime"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['posting']"
+										},
+										"sink": {
+											"name": "posting",
+											"type": "Boolean"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['revenue']"
+										},
+										"sink": {
+											"name": "revenue",
+											"type": "Boolean"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['accountGroup']['dbId']"
+										},
+										"sink": {
+											"name": "_AccountGroupKey",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['accountGroup']['code']"
+										},
+										"sink": {
+											"name": "AccountGroupCode",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['accountGroup']['description']"
+										},
+										"sink": {
+											"name": "AccountGroupDescription",
+											"type": "String"
+										}
+									}
+								],
+								"collectionReference": "$['data']['accounts']['edges']"
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "JSONEXL",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "dsStageAccount",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Update Exledger Keys",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "Load stageAccount",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "UPDATE stage.Account\nSET _AccountKey = 'EXL|' + _AccountKey\n, _AccountGroupKey = 'EXL|' + _AccountGroupKey"
+								}
+							]
+						}
+					},
+					{
+						"name": "Upsert DimAccount",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Update Exledger Keys",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpsertDimAccount]"
+						},
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Update LastLoadDate",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Upsert DimAccount",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpdateLastLoadDate]",
+							"storedProcedureParameters": {
+								"TableName": {
+									"value": "DimAccount",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]",
+				"[concat(variables('factoryId'), '/datasets/dsLastLoadDate')]",
+				"[concat(variables('factoryId'), '/datasets/JSONEXL')]",
+				"[concat(variables('factoryId'), '/datasets/dsStageAccount')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeDimActivity')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Truncate stageAcitivty",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "TRUNCATE TABLE stage.Activity"
+								}
+							]
+						}
+					},
+					{
+						"name": "Get LastLoadDate DimActivity",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Truncate stageAcitivty",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderStoredProcedureName": "[[dbo].[GetLastLoadDate]",
+								"storedProcedureParameters": {
+									"TableName": {
+										"type": "String",
+										"value": "DimActivity"
+									}
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "dsLastLoadDate",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "Load stageActivity",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Get LastLoadDate DimActivity",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "POST",
+									"additionalHeaders": "Content-Type: application/json",
+									"requestBody": {
+										"value": "@{concat('{ \"query\" : \"query {\n  objectValues(first: 10000, filter: {definitionId:993, modifiedAt_gt:\\\"',activity('Get LastLoadDate DimActivity').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        code\n        description\n        dbId\n      }\n    }\n  }\n}\"}')}",
+										"type": "Expression"
+									},
+									"requestTimeout": ""
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "[['node']['code']"
+										},
+										"sink": {
+											"name": "code",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['description']"
+										},
+										"sink": {
+											"name": "description",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['dbId']"
+										},
+										"sink": {
+											"name": "_ActivityKey",
+											"type": "String"
+										}
+									}
+								],
+								"collectionReference": "$['data']['objectValues']['edges']"
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "JSONEXL",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "dsStageActivity",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Update Xledger keys",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "Load stageActivity",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "UPDATE stage.Activity\nSET _ActivityKey = 'EXL|' + _ActivityKey"
+								}
+							]
+						}
+					},
+					{
+						"name": "Upsert DimActivity",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Update Xledger keys",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpsertDimActivity]"
+						},
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Update LastLoadDate",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Upsert DimActivity",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpdateLastLoadDate]",
+							"storedProcedureParameters": {
+								"TableName": {
+									"value": "DimActivity",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]",
+				"[concat(variables('factoryId'), '/datasets/dsLastLoadDate')]",
+				"[concat(variables('factoryId'), '/datasets/JSONEXL')]",
+				"[concat(variables('factoryId'), '/datasets/dsStageActivity')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeDimEmployee')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -77,7 +1262,8 @@
 							"sink": {
 								"type": "AzureSqlSink",
 								"writeBehavior": "insert",
-								"sqlWriterUseTableLock": false
+								"sqlWriterUseTableLock": false,
+								"disableMetricsCollection": false
 							},
 							"enableStaging": false,
 							"translator": {
@@ -270,10 +1456,102 @@
 								"partitionOption": "None"
 							},
 							"dataset": {
-								"referenceName": "stageEmployee",
+								"referenceName": "dsLastLoadDate",
 								"type": "DatasetReference",
 								"parameters": {}
 							}
+						}
+					},
+					{
+						"name": "Update Exledger keys",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "Load stageEmployee",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "UPDATE stage.Employee\nSET _EmployeeKey = 'EXL|' + _EmployeeKey\n\n\nUPDATE stage.Employee\nSET _ContactKey = 'EXL|' + _ContactKey\n\nUPDATE stage.Employee\nSET _CostCenterKey = 'EXL|' + _CostCenterKey\n\nUPDATE stage.Employee\nSET _EmployeeGroupKey = 'EXL|' + _EmployeeGroupKey"
+								}
+							]
+						}
+					},
+					{
+						"name": "Upsert DimEmployee",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Update Exledger keys",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpsertDimEmployee]"
+						},
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Update LastLoadDate",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Upsert DimEmployee",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpdateLastLoadDate]",
+							"storedProcedureParameters": {
+								"TableName": {
+									"value": "DimEmployee",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
 						}
 					},
 					{
@@ -300,22 +1578,6 @@
 								}
 							]
 						}
-					},
-					{
-						"name": "Wait1",
-						"type": "Wait",
-						"dependsOn": [
-							{
-								"activity": "Load stageEmployee",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"waitTimeInSeconds": 1
-						}
 					}
 				],
 				"policy": {
@@ -328,19 +1590,66 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/JSONEXL')]",
 				"[concat(variables('factoryId'), '/datasets/stageEmployee')]",
+				"[concat(variables('factoryId'), '/datasets/dsLastLoadDate')]",
 				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pipeline4')]",
+			"name": "[concat(parameters('factoryName'), '/pipeDimEmployeeGroup')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Copy data1",
+						"name": "Get LastLoadDate DimEmployeeGroup",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Truncate stageEmployeeGroup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderStoredProcedureName": "[[dbo].[GetLastLoadDate]",
+								"storedProcedureParameters": {
+									"TableName": {
+										"type": "String",
+										"value": "DimEmployeeGroup"
+									}
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "dsLastLoadDate",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "Load stageEmployeeGroup",
 						"type": "Copy",
-						"dependsOn": [],
+						"dependsOn": [
+							{
+								"activity": "Get LastLoadDate DimEmployeeGroup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
 						"policy": {
 							"timeout": "7.00:00:00",
 							"retry": 0,
@@ -356,7 +1665,397 @@
 									"type": "HttpReadSettings",
 									"requestMethod": "POST",
 									"additionalHeaders": "Content-Type: application/json",
-									"requestBody": "{ \"query\" : \"query { accounts(last: 10000) { edges { node { code description accountGroup { code description levelParent { code description } } } } } }\"}",
+									"requestBody": {
+										"value": "@{concat('{ \"query\" : \"query { employeeGroups(last: 100, filter: {modifiedAt_gt: \\\"',activity('Get LastLoadDate DimEmployeeGroup').output.firstrow.LastLoadDate,'\\\"}) { edges { node { code createdAt dbId description modifiedAt } } } } \"}')}",
+										"type": "Expression"
+									},
+									"requestTimeout": ""
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false,
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "[['node']['code']"
+										},
+										"sink": {
+											"name": "code",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['createdAt']"
+										},
+										"sink": {
+											"name": "createdAt",
+											"type": "DateTime"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['dbId']"
+										},
+										"sink": {
+											"name": "_EmployeeGroupKey",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['description']"
+										},
+										"sink": {
+											"name": "description",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['modifiedAt']"
+										},
+										"sink": {
+											"name": "modifiedAt",
+											"type": "DateTime"
+										}
+									}
+								],
+								"collectionReference": "$['data']['employeeGroups']['edges']",
+								"mapComplexValuesToString": false
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "JSONEXL",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "dsStageEmployeeGroup",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Truncate stageEmployeeGroup",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "TRUNCATE TABLE stage.EmployeeGroup"
+								}
+							]
+						}
+					},
+					{
+						"name": "Update Exledger keys",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "Load stageEmployeeGroup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "UPDATE stage.EmployeeGroup\nSET _EmployeeGroupKey = 'EXL|' + _EmployeeGroupKey"
+								}
+							]
+						}
+					},
+					{
+						"name": "Upsert DimEmployeeGroup",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Update Exledger keys",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpsertDimEmployeeGroup]"
+						},
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Update LastLoadDate",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Upsert DimEmployeeGroup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpdateLastLoadDate]",
+							"storedProcedureParameters": {
+								"TableName": {
+									"value": "DimEmployeeGroup",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/dsLastLoadDate')]",
+				"[concat(variables('factoryId'), '/datasets/JSONEXL')]",
+				"[concat(variables('factoryId'), '/datasets/dsStageEmployeeGroup')]",
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeLoadAllDimensions')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Load DimEmployee",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pipeDimEmployee",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Load DimEmployeeGroup",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Load DimEmployee",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pipeDimEmployeeGroup",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Load DimAccountGroup",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Load DimEmployeeGroup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pipeAccountGroup",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pipeDimEmployee')]",
+				"[concat(variables('factoryId'), '/pipelines/pipeDimEmployeeGroup')]",
+				"[concat(variables('factoryId'), '/pipelines/pipeAccountGroup')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeProjectGroup')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Truncate stageProjectGroup",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "TRUNCATE TABLE stage.ProjectGroup"
+								}
+							]
+						}
+					},
+					{
+						"name": "Get LastLoadDate DimProjectGroup",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Truncate stageProjectGroup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderStoredProcedureName": "[[dbo].[GetLastLoadDate]",
+								"storedProcedureParameters": {
+									"TableName": {
+										"type": "String",
+										"value": "DimProjectGroup"
+									}
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "dsLastLoadDate",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "Load stageProjectGroup",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Get LastLoadDate DimProjectGroup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "POST",
+									"additionalHeaders": "Content-Type: application/json",
+									"requestBody": {
+										"value": "@{concat('{ \"query\" : \"query {\n  objectValues(first: 1000, filter: {definitionId:38, modifiedAt_gt:\\\"',activity('Get LastLoadDate DimProjectGroup').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        code\n        description\n        dbId\n      }\n    }\n  }\n}\"}')}",
+										"type": "Expression"
+									},
 									"requestTimeout": ""
 								},
 								"formatSettings": {
@@ -392,42 +2091,15 @@
 									},
 									{
 										"source": {
-											"path": "[['node']['accountGroup']['code']"
+											"path": "[['node']['dbId']"
 										},
 										"sink": {
-											"name": "accountGroupCode",
-											"type": "String"
-										}
-									},
-									{
-										"source": {
-											"path": "[['node']['accountGroup']['description']"
-										},
-										"sink": {
-											"name": "accountGroupDescription",
-											"type": "String"
-										}
-									},
-									{
-										"source": {
-											"path": "[['node']['accountGroup']['levelParent']['code']"
-										},
-										"sink": {
-											"name": "accountGroupParentCode",
-											"type": "String"
-										}
-									},
-									{
-										"source": {
-											"path": "[['node']['accountGroup']['levelParent']['description']"
-										},
-										"sink": {
-											"name": "accountGroupParentDesc",
+											"name": "_ProjectGroupKey",
 											"type": "String"
 										}
 									}
 								],
-								"collectionReference": "$['data']['accounts']['edges']"
+								"collectionReference": "$['data']['objectValues']['edges']"
 							}
 						},
 						"inputs": [
@@ -439,7 +2111,503 @@
 						],
 						"outputs": [
 							{
-								"referenceName": "stageEmployee",
+								"referenceName": "dsStageProjectGroup",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Update Exledger Keys",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "Load stageProjectGroup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "UPDATE stage.ProjectGroup \nSET _ProjectGroupKey = 'EXL|' + _ProjectGroupKey"
+								}
+							]
+						}
+					},
+					{
+						"name": "Upsert DimProjectGroup",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Update Exledger Keys",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpsertProjectGroup]"
+						},
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Update LastLoadDate",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Upsert DimProjectGroup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[UpdateLastLoadDate]",
+							"storedProcedureParameters": {
+								"TableName": {
+									"value": "DimProjectGroup",
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]",
+				"[concat(variables('factoryId'), '/datasets/dsLastLoadDate')]",
+				"[concat(variables('factoryId'), '/datasets/JSONEXL')]",
+				"[concat(variables('factoryId'), '/datasets/dsStageProjectGroup')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeRunEmAll')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Load all dimensions",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pipeLoadAllDimensions",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pipeLoadAllDimensions')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipedDimProject')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Truncate stageProject",
+						"type": "Script",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "SIWIDBConn",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "TRUNCATE TABLE stage.Project"
+								}
+							]
+						}
+					},
+					{
+						"name": "Get LastLoadDate DimProject",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Truncate stageProject",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderStoredProcedureName": "[[dbo].[GetLastLoadDate]",
+								"storedProcedureParameters": {
+									"TableName": {
+										"type": "String",
+										"value": "DimProject"
+									}
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "dsLastLoadDate",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "Load stageProject",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Get LastLoadDate DimProject",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "HttpReadSettings",
+									"requestMethod": "POST",
+									"additionalHeaders": "Content-Type: application/json",
+									"requestBody": {
+										"value": "@{concat('{ \"query\" : \"query {\n  projects(last: 10000, filter: {modifiedAt_gte: \\\"',activity('Get LastLoadDate DimProject').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        accessControl\n        activity\n        billable\n        code\n        createdAt\n        dbId\n        description\n        email\n        fromDate\n        fundProject\n        modifiedAt\n        shortInfo\n        shortInternalInfo\n        text\n        timesheetEntry\n        toDate\n        totalCost\n        totalEstimateHours\n        totalRevenue\n        yearlyCost\n        yearlyEstimateHours\n        yearlyRevenue\n        projectGroup {\n          code\n          dbId\n          description\n        }\n        glObject2 {\n          code\n          dbId\n          description\n        }\n        mainProjectDbId\n        mainProject {\n          code\n          description\n        }\n      }\n    }\n  }\n}\n\"}')}",
+										"type": "Expression"
+									},
+									"requestTimeout": ""
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "[['node']['accessControl']"
+										},
+										"sink": {
+											"name": "accessControl",
+											"type": "Boolean"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['activity']"
+										},
+										"sink": {
+											"name": "activity",
+											"type": "Boolean"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['billable']"
+										},
+										"sink": {
+											"name": "billable",
+											"type": "Boolean"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['code']"
+										},
+										"sink": {
+											"name": "code",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['createdAt']"
+										},
+										"sink": {
+											"name": "createdAt",
+											"type": "DateTime"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['dbId']"
+										},
+										"sink": {
+											"name": "_ProjectKey",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['description']"
+										},
+										"sink": {
+											"name": "description",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['email']"
+										},
+										"sink": {
+											"name": "email",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['fromDate']"
+										},
+										"sink": {
+											"name": "fromDate",
+											"type": "DateTime"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['fundProject']"
+										},
+										"sink": {
+											"name": "fundProject",
+											"type": "Boolean"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['modifiedAt']"
+										},
+										"sink": {
+											"name": "modifiedAt",
+											"type": "DateTime"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['shortInfo']"
+										},
+										"sink": {
+											"name": "shortInfo",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['shortInternalInfo']"
+										},
+										"sink": {
+											"name": "shortInternalInfo",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['text']"
+										},
+										"sink": {
+											"name": "ptext",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['timesheetEntry']"
+										},
+										"sink": {
+											"name": "timesheetEntry",
+											"type": "Boolean"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['toDate']"
+										},
+										"sink": {
+											"name": "toDate",
+											"type": "DateTime"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['totalCost']"
+										},
+										"sink": {
+											"name": "totalCost",
+											"type": "Decimal"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['totalEstimateHours']"
+										},
+										"sink": {
+											"name": "totalEstimateHours",
+											"type": "Decimal"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['totalRevenue']"
+										},
+										"sink": {
+											"name": "totalRevenue",
+											"type": "Decimal"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['yearlyCost']"
+										},
+										"sink": {
+											"name": "yearlyCost",
+											"type": "Decimal"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['yearlyEstimateHours']"
+										},
+										"sink": {
+											"name": "yearlyEstimateHours",
+											"type": "Decimal"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['yearlyRevenue']"
+										},
+										"sink": {
+											"name": "yearlyRevenue",
+											"type": "Decimal"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['projectGroup']['code']"
+										},
+										"sink": {
+											"name": "projectGroupCode",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['projectGroup']['dbId']"
+										},
+										"sink": {
+											"name": "_ProjectGroupKey",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"path": "[['node']['projectGroup']['description']"
+										},
+										"sink": {
+											"name": "projectGroupDescription",
+											"type": "String"
+										}
+									}
+								],
+								"collectionReference": "$['data']['projects']['edges']"
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "JSONEXL",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "dsStageProject",
 								"type": "DatasetReference",
 								"parameters": {}
 							}
@@ -450,12 +2618,80 @@
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
 				},
-				"annotations": [],
-				"lastPublishTime": "2022-05-19T10:16:30Z"
+				"annotations": []
 			},
 			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]",
+				"[concat(variables('factoryId'), '/datasets/dsLastLoadDate')]",
 				"[concat(variables('factoryId'), '/datasets/JSONEXL')]",
-				"[concat(variables('factoryId'), '/datasets/stageEmployee')]"
+				"[concat(variables('factoryId'), '/datasets/dsStageProject')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DimEmployee')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "EmployeeKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "_EmployeeKey",
+						"type": "nvarchar"
+					},
+					{
+						"name": "_EmployeeGroupKey",
+						"type": "nvarchar"
+					},
+					{
+						"name": "_CostCenterKey",
+						"type": "nvarchar"
+					},
+					{
+						"name": "EmployeeCode",
+						"type": "nvarchar"
+					},
+					{
+						"name": "EmployeeName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Email",
+						"type": "nvarchar"
+					},
+					{
+						"name": "EmployeeGroupCode",
+						"type": "nvarchar"
+					},
+					{
+						"name": "EmployeeGroup",
+						"type": "nvarchar"
+					},
+					{
+						"name": "CostCenterCode",
+						"type": "nvarchar"
+					},
+					{
+						"name": "CostCenterDescription",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "DimEmployee"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]"
 			]
 		},
 		{
@@ -496,6 +2732,551 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/XledgerConn')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dsDimEmployeeGroup')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "EmployeeGroupKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "_EmployeeGroupKey",
+						"type": "nvarchar"
+					},
+					{
+						"name": "EmployeeGroupCode",
+						"type": "nvarchar"
+					},
+					{
+						"name": "EmployeeGroup",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "DimEmployeeGroup"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dsLastLoadDate')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "LastLoadId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "TableName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastLoadDate",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "LastLoadDate"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dsStageAccount')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "stage",
+					"table": "Account"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dsStageAccountGroup')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "AccountGroupKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "_AccountGroupKey",
+						"type": "nvarchar"
+					},
+					{
+						"name": "code",
+						"type": "nvarchar"
+					},
+					{
+						"name": "description",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "stage",
+					"table": "AccountGroup"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dsStageActivity')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ActivityKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "_ActivityKey",
+						"type": "nvarchar"
+					},
+					{
+						"name": "code",
+						"type": "nvarchar"
+					},
+					{
+						"name": "description",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "stage",
+					"table": "Activity"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dsStageCostCenter')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "CostCenterKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "_CostCenterKey",
+						"type": "nvarchar"
+					},
+					{
+						"name": "code",
+						"type": "nvarchar"
+					},
+					{
+						"name": "description",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "stage",
+					"table": "CostCenter"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dsStageEmployeeGroup')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "EmployeeGroupKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "_EmployeeGroupKey",
+						"type": "nvarchar"
+					},
+					{
+						"name": "code",
+						"type": "nvarchar"
+					},
+					{
+						"name": "createdAt",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "description",
+						"type": "nvarchar"
+					},
+					{
+						"name": "modifiedAt",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "stage",
+					"table": "EmployeeGroup"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dsStageProject')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ProjectKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "_ProjectKey",
+						"type": "nvarchar"
+					},
+					{
+						"name": "_MainProjectKey",
+						"type": "nvarchar"
+					},
+					{
+						"name": "_ProjectGroupKey",
+						"type": "nvarchar"
+					},
+					{
+						"name": "_CostCenterKey",
+						"type": "nvarchar"
+					},
+					{
+						"name": "accessControl",
+						"type": "bit"
+					},
+					{
+						"name": "activity",
+						"type": "bit"
+					},
+					{
+						"name": "billable",
+						"type": "bit"
+					},
+					{
+						"name": "code",
+						"type": "nvarchar"
+					},
+					{
+						"name": "createdAt",
+						"type": "date"
+					},
+					{
+						"name": "description",
+						"type": "nvarchar"
+					},
+					{
+						"name": "email",
+						"type": "nvarchar"
+					},
+					{
+						"name": "fromDate",
+						"type": "date"
+					},
+					{
+						"name": "fundProject",
+						"type": "bit"
+					},
+					{
+						"name": "modifiedAt",
+						"type": "date"
+					},
+					{
+						"name": "shortInfo",
+						"type": "nvarchar"
+					},
+					{
+						"name": "shortInternalInfo",
+						"type": "nvarchar"
+					},
+					{
+						"name": "text",
+						"type": "nvarchar"
+					},
+					{
+						"name": "timesheetEntry",
+						"type": "bit"
+					},
+					{
+						"name": "toDate",
+						"type": "date"
+					},
+					{
+						"name": "totalCost",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 2
+					},
+					{
+						"name": "totalEstimateHours",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 2
+					},
+					{
+						"name": "totalRevenue",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 2
+					},
+					{
+						"name": "yearlyCost",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 2
+					},
+					{
+						"name": "yearlyEstimateHours",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 2
+					},
+					{
+						"name": "yearlyRevenue",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 2
+					},
+					{
+						"name": "projectGroupCode",
+						"type": "nvarchar"
+					},
+					{
+						"name": "projectGroupDescription",
+						"type": "nvarchar"
+					},
+					{
+						"name": "glObject2Code",
+						"type": "nvarchar"
+					},
+					{
+						"name": "glObject2Description",
+						"type": "nvarchar"
+					},
+					{
+						"name": "mainProjectCode",
+						"type": "nvarchar"
+					},
+					{
+						"name": "mainProjectDescription",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "stage",
+					"table": "Project"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dsStageProjectGroup')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "ProjectGroupKey",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "_ProjectGroupKey",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Code",
+						"type": "nvarchar"
+					},
+					{
+						"name": "ProjectGroup",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "stage",
+					"table": "ProjectGroup"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIDBConn')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/jsonblob')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SIWIBlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "acc.json",
+						"folderPath": "testdir",
+						"container": "xledger"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"data": {
+							"type": "object",
+							"properties": {
+								"accounts": {
+									"type": "object",
+									"properties": {
+										"edges": {
+											"type": "array",
+											"items": {
+												"type": "object",
+												"properties": {
+													"node": {
+														"type": "object",
+														"properties": {
+															"dbId": {
+																"type": "integer"
+															},
+															"code": {
+																"type": "string"
+															},
+															"description": {
+																"type": "string"
+															},
+															"chartOfAccountDbId": {
+																"type": "integer"
+															},
+															"accountGroupDbId": {
+																"type": "integer"
+															},
+															"modifiedAt": {
+																"type": "string"
+															},
+															"accountGroup": {
+																"type": "object",
+																"properties": {
+																	"dbId": {
+																		"type": "integer"
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SIWIBlobStorage')]"
 			]
 		},
 		{
@@ -583,36 +3364,6 @@
 				}
 			},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/trigger1')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "pipeline3",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Minute",
-						"interval": 3,
-						"startTime": "2022-05-19T14:07:00",
-						"timeZone": "W. Europe Standard Time"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pipeline3')]"
-			]
 		}
 	]
 }
