@@ -220,15 +220,6 @@
 							},
 							{
 								"source": {
-									"path": "['node']['shortInternalInfo']"
-								},
-								"sink": {
-									"name": "shortInternalInfo",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
 									"path": "['node']['text']"
 								},
 								"sink": {
@@ -334,6 +325,60 @@
 									"name": "projectGroupDescription",
 									"type": "String"
 								}
+							},
+							{
+								"source": {
+									"path": "['node']['glObject2']['code']"
+								},
+								"sink": {
+									"name": "glObject2Code",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['glObject2']['dbId']"
+								},
+								"sink": {
+									"name": "_CostCenterKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['glObject2']['description']"
+								},
+								"sink": {
+									"name": "glObject2Description",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['mainProjectDbId']"
+								},
+								"sink": {
+									"name": "_MainProjectKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['mainProject']['code']"
+								},
+								"sink": {
+									"name": "mainProjectCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['mainProject']['description']"
+								},
+								"sink": {
+									"name": "mainProjectDescription",
+									"type": "String"
+								}
 							}
 						],
 						"collectionReference": "$['data']['projects']['edges']"
@@ -351,6 +396,38 @@
 						"type": "DatasetReference"
 					}
 				]
+			},
+			{
+				"name": "Update Exledger Keys",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Load stageProject",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "UPDATE stage.Project\nSET _ProjectKey = 'EXL|'+_ProjectKey\n, _MainProjectKey = 'EXL|'+_MainProjectKey\n, _ProjectGroupKey = 'EXL'+_ProjectGroupKey\n,_CostCenterKey = 'EXL|'+_CostCenterKey"
+						}
+					]
+				}
 			}
 		],
 		"annotations": []
