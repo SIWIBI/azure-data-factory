@@ -1,0 +1,135 @@
+{
+	"name": "dsStageTransaction",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SIWIDBConn",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "TransactionKey",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "_TransactionKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_AccountKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_TransactionSourceKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_ProjectKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "amount",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "amount3",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "amount4",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "amount5",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "invoiceAmount",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "monthNumber",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "periodId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "periodNumber",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "positionNumber",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "quantity",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "reconciled",
+				"type": "bit"
+			},
+			{
+				"name": "taxAmount",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "trText",
+				"type": "nvarchar"
+			},
+			{
+				"name": "createdAt",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "transactionNumber",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "transactionSourceCode",
+				"type": "nvarchar"
+			},
+			{
+				"name": "transactionSourceDesc",
+				"type": "nvarchar"
+			},
+			{
+				"name": "projectCode",
+				"type": "nvarchar"
+			},
+			{
+				"name": "projectDescription",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "stage",
+			"table": "ERPTransaction"
+		}
+	}
+}
