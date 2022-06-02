@@ -1,0 +1,39 @@
+{
+	"name": "pipeline1",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup1",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "POST",
+							"requestBody": "{ \"query\" : \"query {\n  journalHeaders(last: 100) {\n    edges {\n      node {\n        dbId\n        text\n        trRegNumber\n        transactionSource {\n          code\n          dbId\n        }\n        transactions(last: 100) {\n          edges {\n            node {\n              dbId\n              amount\n              amount3\n              amount4\n              amount5\n              accountDbId\n              text\n              headerDbID\n            }\n          }\n        }\n        \n      }\n    }\n  }\n}\n\n\"}",
+							"requestTimeout": ""
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "JSONEXL",
+						"type": "DatasetReference"
+					}
+				}
+			}
+		],
+		"annotations": []
+	}
+}
