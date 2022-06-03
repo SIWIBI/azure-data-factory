@@ -3,8 +3,8 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Lookup1",
-				"type": "Lookup",
+				"name": "Load stageTransactions",
+				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "7.00:00:00",
@@ -20,18 +20,48 @@
 						"storeSettings": {
 							"type": "HttpReadSettings",
 							"requestMethod": "POST",
-							"requestBody": "{ \"query\" : \"query {\n  journalHeaders(last: 100) {\n    edges {\n      node {\n        dbId\n        text\n        trRegNumber\n        transactionSource {\n          code\n          dbId\n        }\n        transactions(last: 100) {\n          edges {\n            node {\n              dbId\n              amount\n              amount3\n              amount4\n              amount5\n              accountDbId\n              text\n              headerDbID\n            }\n          }\n        }\n        \n      }\n    }\n  }\n}\n\n\"}",
+							"additionalHeaders": "Content-Type: application/json",
+							"requestBody": "{ \"query\" : \"query {\n  journalHeaders(last: 1000, filter: { modifiedAt_gte:\\\"2022-05-22\\\"}) {\n    edges {\n      node {\n        dbId\n      }\n    }\n  }\n}\"}",
 							"requestTimeout": ""
 						},
 						"formatSettings": {
 							"type": "JsonReadSettings"
 						}
 					},
-					"dataset": {
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "$['data']['journalHeaders']['edges'][0]['node']['dbId']"
+								},
+								"sink": {
+									"name": "_JournalHeaderKey",
+									"type": "String"
+								}
+							}
+						],
+						"collectionReference": "$['data']['journalHeaders']['edges']"
+					}
+				},
+				"inputs": [
+					{
 						"referenceName": "JSONEXL",
 						"type": "DatasetReference"
 					}
-				}
+				],
+				"outputs": [
+					{
+						"referenceName": "dsStageJournalHeaders",
+						"type": "DatasetReference"
+					}
+				]
 			}
 		],
 		"annotations": []
