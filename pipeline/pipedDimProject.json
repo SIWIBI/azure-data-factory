@@ -92,7 +92,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: application/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query {\n  projects(last: 10000, filter: {dbId:24287547}) {\n    edges {\n      node {\n        accessControl\n        activity\n        billable\n        code\n        createdAt\n        dbId\n        description\n        email\n        fromDate\n        fundProject\n        modifiedAt\n        shortInfo\n        shortInternalInfo\n        text\n        timesheetEntry\n        toDate\n        totalCost\n        totalEstimateHours\n        totalRevenue\n        yearlyCost\n        yearlyEstimateHours\n        yearlyRevenue\n        projectGroup {\n          code\n          dbId\n          description\n        }\n        glObject1 {\n          dbId\n          code\n          description\n        }\n        glObject2 {\n          code\n          dbId\n          description\n        }        \n        glObject3 {\n          dbId\n          code\n          description\n        }\n        glObject4 {\n          dbId\n          code\n          description\n        }    \n        mainProjectDbId\n        mainProject {\n          code\n          description\n        }\n      }\n    }\n  }\n}\n\"}')}",
+								"value": "@{concat('{ \"query\" : \"query {\n  projects(last: 10000, filter: {modifiedAt_gte: \\\"',activity('Get LastLoadDate DimProject').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        accessControl\n        activity\n        billable\n        code\n        createdAt\n        dbId\n        description\n        email\n        fromDate\n        fundProject\n        modifiedAt\n        shortInfo\n        shortInternalInfo\n        text\n        timesheetEntry\n        toDate\n        totalCost\n        totalEstimateHours\n        totalRevenue\n        yearlyCost\n        yearlyEstimateHours\n        yearlyRevenue\n        projectGroup {\n          code\n          dbId\n          description\n        }\n        glObject1 {\n          dbId\n          code\n          description\n        }\n        glObject2 {\n          code\n          dbId\n          description\n        }        \n        glObject3 {\n          dbId\n          code\n          description\n        }\n        glObject4 {\n          dbId\n          code\n          description\n        }    \n        mainProjectDbId\n        mainProject {\n          code\n          description\n        }\n      }\n    }\n  }\n}\n\"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
@@ -481,6 +481,33 @@
 							"text": "UPDATE stage.Project\nSET _ProjectKey = 'EXL|'+_ProjectKey\n, _MainProjectKey = 'EXL|'+_MainProjectKey\n, _ProjectGroupKey = 'EXL'+_ProjectGroupKey\n,_CostCenterKey = 'EXL|'+_CostCenterKey"
 						}
 					]
+				}
+			},
+			{
+				"name": "Upsert DimProject",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Update Exledger Keys",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[UpsertDimProject]"
+				},
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
 				}
 			}
 		],
