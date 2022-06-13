@@ -92,7 +92,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: application/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query {\n  projects(last: 10000, filter: {modifiedAt_gte: \\\"',activity('Get LastLoadDate DimProject').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        accessControl\n        activity\n        billable\n        code\n        createdAt\n        dbId\n        description\n        email\n        fromDate\n        fundProject\n        modifiedAt\n        shortInfo\n        shortInternalInfo\n        text\n        timesheetEntry\n        toDate\n        totalCost\n        totalEstimateHours\n        totalRevenue\n        yearlyCost\n        yearlyEstimateHours\n        yearlyRevenue\n        projectGroup {\n          code\n          dbId\n          description\n        }\n        glObject2 {\n          code\n          dbId\n          description\n        }\n        mainProjectDbId\n        mainProject {\n          code\n          description\n        }\n      }\n    }\n  }\n}\n\"}')}",
+								"value": "@{concat('{ \"query\" : \"query {\n  projects(last: 10000, filter: {dbId:24287547}) {\n    edges {\n      node {\n        accessControl\n        activity\n        billable\n        code\n        createdAt\n        dbId\n        description\n        email\n        fromDate\n        fundProject\n        modifiedAt\n        shortInfo\n        shortInternalInfo\n        text\n        timesheetEntry\n        toDate\n        totalCost\n        totalEstimateHours\n        totalRevenue\n        yearlyCost\n        yearlyEstimateHours\n        yearlyRevenue\n        projectGroup {\n          code\n          dbId\n          description\n        }\n        glObject1 {\n          dbId\n          code\n          description\n        }\n        glObject2 {\n          code\n          dbId\n          description\n        }        \n        glObject3 {\n          dbId\n          code\n          description\n        }\n        glObject4 {\n          dbId\n          code\n          description\n        }    \n        mainProjectDbId\n        mainProject {\n          code\n          description\n        }\n      }\n    }\n  }\n}\n\"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
@@ -220,6 +220,15 @@
 							},
 							{
 								"source": {
+									"path": "['node']['shortInternalInfo']"
+								},
+								"sink": {
+									"name": "shortInternalInfo",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
 									"path": "['node']['text']"
 								},
 								"sink": {
@@ -328,6 +337,24 @@
 							},
 							{
 								"source": {
+									"path": "['node']['glObject1']['code']"
+								},
+								"sink": {
+									"name": "glObject1Code",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['glObject1']['description']"
+								},
+								"sink": {
+									"name": "glObject1Description",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
 									"path": "['node']['glObject2']['code']"
 								},
 								"sink": {
@@ -337,19 +364,46 @@
 							},
 							{
 								"source": {
-									"path": "['node']['glObject2']['dbId']"
+									"path": "['node']['glObject2']['description']"
 								},
 								"sink": {
-									"name": "_CostCenterKey",
+									"name": "glObject2Description",
 									"type": "String"
 								}
 							},
 							{
 								"source": {
-									"path": "['node']['glObject2']['description']"
+									"path": "['node']['glObject3']['code']"
 								},
 								"sink": {
-									"name": "glObject2Description",
+									"name": "glObject3Code",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['glObject3']['description']"
+								},
+								"sink": {
+									"name": "glObject3Description",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['glObject4']['code']"
+								},
+								"sink": {
+									"name": "glObject4Code",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['glObject4']['description']"
+								},
+								"sink": {
+									"name": "glObject4Description",
 									"type": "String"
 								}
 							},
