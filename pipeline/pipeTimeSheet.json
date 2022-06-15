@@ -1,5 +1,5 @@
 {
-	"name": "pipeline1",
+	"name": "pipeTimeSheet",
 	"properties": {
 		"activities": [
 			{
@@ -52,7 +52,8 @@
 						"sqlReaderStoredProcedureName": "[dbo].[GetLastLoadDate]",
 						"storedProcedureParameters": {
 							"TableName": {
-								"type": "String"
+								"type": "String",
+								"value": "TimeSheet"
 							}
 						},
 						"queryTimeout": "02:00:00",
@@ -62,6 +63,334 @@
 						"referenceName": "dsLastLoadDate",
 						"type": "DatasetReference"
 					}
+				}
+			},
+			{
+				"name": "Load stageTimesheet",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Get LastLoadDate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "POST",
+							"additionalHeaders": "Content-Tpe: application/json",
+							"requestBody": {
+								"value": "@{concat('{ \"query\" : \"query {\n  timesheets(last: 10000, filter:{modifiedAt_gte:\\\"',activity('Get LastLoadDate').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        dbId\n        text\n        invoiced\n        payroll\n        assignmentDate\n        approvedAt\n        invoiceHours\n        workingHours\n        comment\n        posted\n        approved\n        income\n        isHeaderApproved\n        projectDbId\n        hourlyCost\n        hourlyRevenueCurrency\n        headerApprovedAt\n        employeeDbId\n        assignment {\n          dbId\n          code\n          description\n        }\n        activity {\n          dbId\n          code\n          description\n        }\n        objectValue {\n          code\n          description\n        }\n      }\n    }\n  }\n}\n\"}')}",
+								"type": "Expression"
+							},
+							"requestTimeout": ""
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "['node']['dbId']"
+								},
+								"sink": {
+									"name": "_TimesheetKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['text']"
+								},
+								"sink": {
+									"name": "textTS",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['invoiced']"
+								},
+								"sink": {
+									"name": "invoiced",
+									"type": "Boolean"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['payroll']"
+								},
+								"sink": {
+									"name": "payroll",
+									"type": "Boolean"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['assignmentDate']"
+								},
+								"sink": {
+									"name": "assignmentDate",
+									"type": "DateTime"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['approvedAt']"
+								},
+								"sink": {
+									"name": "approvedAt",
+									"type": "DateTime"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['invoiceHours']"
+								},
+								"sink": {
+									"name": "invoiceHours",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['workingHours']"
+								},
+								"sink": {
+									"name": "workingHours",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['comment']"
+								},
+								"sink": {
+									"name": "comment",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['posted']"
+								},
+								"sink": {
+									"name": "posted",
+									"type": "Boolean"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['approved']"
+								},
+								"sink": {
+									"name": "approved",
+									"type": "Boolean"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['income']"
+								},
+								"sink": {
+									"name": "income",
+									"type": "Boolean"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['isHeaderApproved']"
+								},
+								"sink": {
+									"name": "isHeaderApproved",
+									"type": "Boolean"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['projectDbId']"
+								},
+								"sink": {
+									"name": "_ProjectKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['hourlyCost']"
+								},
+								"sink": {
+									"name": "hourlyCost",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['hourlyRevenueCurrency']"
+								},
+								"sink": {
+									"name": "hourlyRevenueCurrency",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['headerApprovedAt']"
+								},
+								"sink": {
+									"name": "headerApprovedAt",
+									"type": "DateTime"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['employeeDbId']"
+								},
+								"sink": {
+									"name": "_EmployeeKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['assignment']['dbId']"
+								},
+								"sink": {
+									"name": "_AssignmentKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['assignment']['code']"
+								},
+								"sink": {
+									"name": "assignmentCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['assignment']['description']"
+								},
+								"sink": {
+									"name": "assignmentDescription",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['activity']['dbId']"
+								},
+								"sink": {
+									"name": "_ActivityKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['activity']['code']"
+								},
+								"sink": {
+									"name": "activityCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['activity']['description']"
+								},
+								"sink": {
+									"name": "activityDescription",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['objectValue']['code']"
+								},
+								"sink": {
+									"name": "objectValueCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['objectValue']['description']"
+								},
+								"sink": {
+									"name": "objectValueDescriptioni",
+									"type": "String"
+								}
+							}
+						],
+						"collectionReference": "$['data']['timesheets']['edges']"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "JSONEXL",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "dsTimeSheet",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Update Exledger keys",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Load stageTimesheet",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "UPDATE stage.TimeSheet\nSET _TimeSheetKey = 'EXL|'+ _TimeSheetKey,\n_ProjectKey = 'EXL|'+_ProjectKey,\n_EmployeeKey = 'EXL|'+_EmployeeKey,\n_ActivityKey = 'EXL|'+_ActivityKey,\n_AssignmentKey = 'EXL|'+_AssignmentKey"
+						}
+					]
 				}
 			}
 		],

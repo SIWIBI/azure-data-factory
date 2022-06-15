@@ -1,0 +1,138 @@
+{
+	"name": "dsTimeSheet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SIWIDBConn",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "TimesheetKey",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "_TimesheetKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_ProjectKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_EmployeeKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "_ActivityKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "activityCode",
+				"type": "nvarchar"
+			},
+			{
+				"name": "activityDescription",
+				"type": "nvarchar"
+			},
+			{
+				"name": "approved",
+				"type": "bit"
+			},
+			{
+				"name": "approvedAt",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "assignmentDate",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "comment",
+				"type": "nvarchar"
+			},
+			{
+				"name": "headerApprovedAt",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "hourlyCost",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "hourlyRevenueCurrency",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "income",
+				"type": "bit"
+			},
+			{
+				"name": "invoiced",
+				"type": "bit"
+			},
+			{
+				"name": "invoiceHours",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "isHeaderApproved",
+				"type": "bit"
+			},
+			{
+				"name": "modifiedAt",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "payroll",
+				"type": "bit"
+			},
+			{
+				"name": "posted",
+				"type": "bit"
+			},
+			{
+				"name": "textTS",
+				"type": "nvarchar"
+			},
+			{
+				"name": "timeFrom",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "timeTo",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "workingHours",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			}
+		],
+		"typeProperties": {
+			"schema": "stage",
+			"table": "Timesheet"
+		}
+	}
+}
