@@ -3,53 +3,13 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Load DimEmployee",
+				"name": "Execute DimAccountGroup",
 				"type": "ExecutePipeline",
 				"dependsOn": [],
 				"userProperties": [],
 				"typeProperties": {
 					"pipeline": {
-						"referenceName": "pipeDimEmployee",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true
-				}
-			},
-			{
-				"name": "Load DimEmployeeGroup",
-				"type": "ExecutePipeline",
-				"dependsOn": [
-					{
-						"activity": "Load DimEmployee",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "pipeDimEmployeeGroup",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true
-				}
-			},
-			{
-				"name": "Load DimAccountGroup",
-				"type": "ExecutePipeline",
-				"dependsOn": [
-					{
-						"activity": "Load DimEmployeeGroup",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "pipeAccountGroup",
+						"referenceName": "pipeDimAccountGroup",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true
