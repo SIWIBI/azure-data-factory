@@ -29,7 +29,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: applicatoin/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query { employees(last: 1000, filter: {modifiedAt_gt:\\\"',activity('Get LastLoadDate DimEmployee').output.firstrow.LastLoadDate,'\\\"}) { edges { node { code contactDbId createdAt dateFrom dateTo dbId description email employeeGroupDbId modifiedAt glObject1 { code description dbId } employeeGroup { code description } } } } }\"}')}",
+								"value": "@{concat('{ \"query\" : \"query { employees(last: 1000, filter: {modifiedAt_gte:\\\"',activity('Get LastLoadDate DimEmployee').output.firstrow.LastLoadDate,'\\\"}) { edges { node { code contactDbId createdAt dateFrom dateTo dbId description email employeeGroupDbId modifiedAt glObject1 { code description dbId } employeeGroup { code description } } } } }\"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
