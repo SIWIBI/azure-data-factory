@@ -92,7 +92,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: application/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query {  objectValues(first: 3000, filter: {modifiedAt_gt:\\\"',activity('Get LastLoadDate DimAccountGroup').output.firstrow.LastLoadDate,'\\\" definitionId:879}) { edges { node { code description dbId } } } } \"}')}",
+								"value": "@{concat('{ \"query\" : \"query {  objectValues(first: 3000, filter: {modifiedAt_gte:\\\"',activity('Get LastLoadDate DimAccountGroup').output.firstrow.LastLoadDate,'\\\" definitionId:879}) { edges { node { code description dbId } } } } \"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
