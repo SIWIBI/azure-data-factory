@@ -92,7 +92,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: application/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query {\n  objectValues(first: 100, filter: {definitionId:41, modifiedAt_gt:\\\"',activity('Get LastLoadDate DimCostCenter').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        code\n        description\n        dbId\n      }\n    }\n  }\n}\"}')}",
+								"value": "@{concat('{ \"query\" : \"query {\n  objectValues(first: 100, filter: {definitionId:41, modifiedAt_gte:\\\"',activity('Get LastLoadDate DimCostCenter').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        code\n        description\n        dbId\n      }\n    }\n  }\n}\"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
