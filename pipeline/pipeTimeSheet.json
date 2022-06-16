@@ -424,7 +424,7 @@
 					"scripts": [
 						{
 							"type": "Query",
-							"text": "UPDATE stage.TimeSheet\nSET _TimeSheetKey = 'EXL|'+ _TimeSheetKey,\n_ProjectKey = 'EXL|'+_ProjectKey,\n_EmployeeKey = 'EXL|'+_EmployeeKey,\n_ActivityKey = 'EXL|'+_ActivityKey,\n_AssignmentKey = 'EXL|'+_AssignmentKey"
+							"text": "UPDATE stage.TimeSheet\nSET _TimeSheetKey = 'EXL|'+ _TimeSheetKey,\n_ProjectKey = 'EXL|'+_ProjectKey,\n_EmployeeKey = 'EXL|'+_EmployeeKey,\n_ActivityKey = 'EXL|'+_ActivityKey,\n_AssignmentKey = 'EXL|'+_AssignmentKey,\n_RegionKey = 'EXL|'+_RegionKey,\n_PricelistKey = 'EXL|'+_PricelistKey"
 						}
 					]
 				}
