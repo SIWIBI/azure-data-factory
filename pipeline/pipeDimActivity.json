@@ -92,7 +92,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: application/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query {\n  objectValues(first: 10000, filter: {definitionId:993, modifiedAt_gt:\\\"',activity('Get LastLoadDate DimActivity').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        code\n        description\n        dbId\n      }\n    }\n  }\n}\"}')}",
+								"value": "@{concat('{ \"query\" : \"query {\n  objectValues(first: 10000, filter: {definitionId:993, modifiedAt_gte:\\\"',activity('Get LastLoadDate DimActivity').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        code\n        description\n        dbId\n      }\n    }\n  }\n}\"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
