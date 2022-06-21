@@ -26,6 +26,44 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "Get LastLoadDate",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Truncate stagePricelist",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[dbo].[GetLastLoadDate]",
+						"storedProcedureParameters": {
+							"TableName": {
+								"type": "String",
+								"value": "DimPricelist"
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "dsLastLoadDate",
+						"type": "DatasetReference"
+					}
+				}
 			}
 		],
 		"annotations": []
