@@ -469,7 +469,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Create filname').output.value",
+						"value": "@activity('Get Filename').output.value",
 						"type": "Expression"
 					},
 					"isSequential": true,

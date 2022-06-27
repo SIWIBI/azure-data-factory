@@ -11,7 +11,7 @@
 			"location": {
 				"type": "AzureBlobStorageLocation",
 				"fileName": {
-					"value": "item().filenName",
+					"value": "item().fileName",
 					"type": "Expression"
 				},
 				"folderPath": "docfiles",
