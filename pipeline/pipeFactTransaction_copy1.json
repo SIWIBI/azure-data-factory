@@ -497,11 +497,23 @@
 										"type": "BinaryReadSettings"
 									}
 								},
+								"sink": {
+									"type": "BinarySink",
+									"storeSettings": {
+										"type": "AzureBlobStorageWriteSettings"
+									}
+								},
 								"enableStaging": false
 							},
 							"inputs": [
 								{
 									"referenceName": "FileFromXledger",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "SaveBlobFile",
 									"type": "DatasetReference"
 								}
 							]
