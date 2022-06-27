@@ -10,10 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "HttpServerLocation",
-				"relativeUrl": {
-					"value": "item().partialUrl",
-					"type": "Expression"
-				}
+				"relativeUrl": "172827739.3.3.0/Doc.pdf?signature=uf5UJjvM7cs2JMlvvpiGDGB65fkEX2VpTMwlmc2m1KQ1&valid_until=1656339264&rv_user=55302&rv_owner=23003234"
 			}
 		}
 	}

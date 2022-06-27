@@ -29,7 +29,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: application/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query {\n  journalHeaders(first: 10000) {\n    edges {\n      node {\n        dbId\n      }\n    }\n  }\n}\"}')}",
+								"value": "@{concat('{ \"query\" : \"query {\n  journalHeaders(last: 10000) {\n    edges {\n      node {\n        dbId\n      }\n    }\n  }\n}\"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
