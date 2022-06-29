@@ -469,56 +469,10 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Get Filename').output.value",
+						"value": "@pipeline().parameters.partialUrl",
 						"type": "Expression"
 					},
-					"isSequential": true,
-					"activities": [
-						{
-							"name": "Copy data1",
-							"type": "Copy",
-							"dependsOn": [],
-							"policy": {
-								"timeout": "7.00:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"source": {
-									"type": "BinarySource",
-									"storeSettings": {
-										"type": "HttpReadSettings",
-										"requestMethod": "GET"
-									},
-									"formatSettings": {
-										"type": "BinaryReadSettings"
-									}
-								},
-								"sink": {
-									"type": "BinarySink",
-									"storeSettings": {
-										"type": "AzureBlobStorageWriteSettings"
-									}
-								},
-								"enableStaging": false
-							},
-							"inputs": [
-								{
-									"referenceName": "FileFromXledger",
-									"type": "DatasetReference"
-								}
-							],
-							"outputs": [
-								{
-									"referenceName": "SaveBlobFile",
-									"type": "DatasetReference"
-								}
-							]
-						}
-					]
+					"isSequential": true
 				}
 			},
 			{
@@ -532,9 +486,21 @@
 						]
 					}
 				],
-				"userProperties": []
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "varPartialUrls",
+					"value": {
+						"value": "@activity('Get Filename').output",
+						"type": "Expression"
+					}
+				}
 			}
 		],
+		"parameters": {
+			"partialUrl": {
+				"type": "array"
+			}
+		},
 		"variables": {
 			"varPartialUrls": {
 				"type": "String"
