@@ -458,14 +458,17 @@
 			{
 				"name": "ForEach Fllename",
 				"type": "ForEach",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Get Filename",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
-					"items": {
-						"value": "@variables('varPartialUrls')",
-						"type": "Expression"
-					},
-					"isSequential": true,
+					"isSequential": false,
 					"activities": [
 						{
 							"name": "Copy data1",
@@ -503,11 +506,6 @@
 				}
 			}
 		],
-		"parameters": {
-			"partialUrl": {
-				"type": "array"
-			}
-		},
 		"annotations": []
 	}
 }
