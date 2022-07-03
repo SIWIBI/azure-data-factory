@@ -520,7 +520,13 @@
 							"outputs": [
 								{
 									"referenceName": "SaveBlobFile",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"fileName": {
+											"value": "@item().Filename",
+											"type": "Expression"
+										}
+									}
 								}
 							]
 						}

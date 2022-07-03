@@ -16,7 +16,7 @@
 			"location": {
 				"type": "AzureBlobStorageLocation",
 				"fileName": {
-					"value": "testa.pdf",
+					"value": "@dataset().fileName",
 					"type": "Expression"
 				},
 				"folderPath": "docfiles",
