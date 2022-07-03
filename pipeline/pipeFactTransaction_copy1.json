@@ -468,7 +468,11 @@
 				],
 				"userProperties": [],
 				"typeProperties": {
-					"isSequential": false,
+					"items": {
+						"value": "@activity('Get Filename').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
 					"activities": [
 						{
 							"name": "Copy data1",
@@ -493,11 +497,29 @@
 										"type": "BinaryReadSettings"
 									}
 								},
+								"sink": {
+									"type": "BinarySink",
+									"storeSettings": {
+										"type": "AzureBlobStorageWriteSettings"
+									}
+								},
 								"enableStaging": false
 							},
 							"inputs": [
 								{
 									"referenceName": "FileFromXledger",
+									"type": "DatasetReference",
+									"parameters": {
+										"partialUrl": {
+											"value": "@item()",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "SaveBlobFile",
 									"type": "DatasetReference"
 								}
 							]
