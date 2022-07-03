@@ -444,7 +444,7 @@
 				"typeProperties": {
 					"source": {
 						"type": "AzureSqlSource",
-						"sqlReaderQuery": "select  fileName\n,\t\tpartialUrl\nFROM\tstage.ERPTransaction\nwhere url is not null",
+						"sqlReaderQuery": "select  partialUrl\nFROM\tstage.ERPTransaction\nwhere url is not null",
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
@@ -506,6 +506,11 @@
 				}
 			}
 		],
+		"parameters": {
+			"partialUrls": {
+				"type": "array"
+			}
+		},
 		"annotations": []
 	}
 }
