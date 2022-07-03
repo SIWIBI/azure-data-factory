@@ -511,7 +511,7 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"partialUrl": {
-											"value": "@item()",
+											"value": "@item().partialUrl",
 											"type": "Expression"
 										}
 									}

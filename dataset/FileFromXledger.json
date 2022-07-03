@@ -14,11 +14,7 @@
 		"type": "Binary",
 		"typeProperties": {
 			"location": {
-				"type": "HttpServerLocation",
-				"relativeUrl": {
-					"value": "dataset().partialUrl",
-					"type": "Expression"
-				}
+				"type": "HttpServerLocation"
 			}
 		}
 	}
