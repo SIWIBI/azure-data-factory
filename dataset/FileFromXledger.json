@@ -5,12 +5,16 @@
 			"referenceName": "HttpGetFile",
 			"type": "LinkedServiceReference"
 		},
+		"parameters": {
+			"partialUrl": {
+				"type": "array"
+			}
+		},
 		"annotations": [],
 		"type": "Binary",
 		"typeProperties": {
 			"location": {
-				"type": "HttpServerLocation",
-				"relativeUrl": "@dataset().partialUrl"
+				"type": "HttpServerLocation"
 			}
 		}
 	}

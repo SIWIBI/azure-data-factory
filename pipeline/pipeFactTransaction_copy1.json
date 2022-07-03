@@ -458,14 +458,7 @@
 			{
 				"name": "ForEach Fllename",
 				"type": "ForEach",
-				"dependsOn": [
-					{
-						"activity": "Set variable1",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
@@ -508,36 +501,11 @@
 						}
 					]
 				}
-			},
-			{
-				"name": "Set variable1",
-				"type": "SetVariable",
-				"dependsOn": [
-					{
-						"activity": "Get Filename",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"variableName": "varPartialUrls",
-					"value": {
-						"value": "@activity('Get Filename').output.value",
-						"type": "Expression"
-					}
-				}
 			}
 		],
 		"parameters": {
 			"partialUrl": {
 				"type": "array"
-			}
-		},
-		"variables": {
-			"varPartialUrls": {
-				"type": "Array"
 			}
 		},
 		"annotations": []
