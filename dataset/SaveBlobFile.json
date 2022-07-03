@@ -11,7 +11,7 @@
 			"location": {
 				"type": "AzureBlobStorageLocation",
 				"fileName": {
-					"value": "item().partialUrl",
+					"value": "testa.pdf",
 					"type": "Expression"
 				},
 				"folderPath": "docfiles",
