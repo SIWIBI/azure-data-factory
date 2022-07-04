@@ -412,7 +412,7 @@
 				"typeProperties": {
 					"source": {
 						"type": "AzureSqlSource",
-						"sqlReaderQuery": "select  partialUrl\n, fileName\nFROM\tstage.TemporaryFilename",
+						"sqlReaderQuery": "select top(500) partialUrl\n, fileName\nFROM\tstage.TemporaryFilename",
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
