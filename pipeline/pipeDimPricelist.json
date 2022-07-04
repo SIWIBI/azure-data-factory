@@ -22,7 +22,7 @@
 					"scripts": [
 						{
 							"type": "Query",
-							"text": "TRUNCATE TABLE stage.DimPricelist"
+							"text": "TRUNCATE TABLE stage.Pricelist"
 						}
 					]
 				}
