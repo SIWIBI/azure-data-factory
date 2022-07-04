@@ -393,7 +393,14 @@
 			{
 				"name": "Get Filename",
 				"type": "Lookup",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Insert unique Url",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "7.00:00:00",
 					"retry": 0,
@@ -405,7 +412,7 @@
 				"typeProperties": {
 					"source": {
 						"type": "AzureSqlSource",
-						"sqlReaderQuery": "select  partialUrl\n, fileName\nFROM\tstage.ERPTransaction\nwhere url is not null",
+						"sqlReaderQuery": "select  partialUrl\n, fileName\nFROM\tstage.TemporaryFilename",
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
@@ -521,7 +528,7 @@
 					"scripts": [
 						{
 							"type": "Query",
-							"text": "INSERT INTO stage.TemporaryFilename\nSELECT DISTINCT\t\tUrl\nFROM\tstage.ERPTransaction\nWHERE\tUrl IS NOT NULL"
+							"text": "INSERT INTO stage.TemporaryFilename\nSELECT DISTINCT\tUrl, null, null\nFROM\tstage.ERPTransaction\nWHERE\tUrl IS NOT NULL\n\nUPDATE\tstage.TemporaryFilename\nSET\t\tfilename = CAST(NEWID() AS VARCHAR(100)) + '.pdf'\n,\t\tpartialUrl = SUBSTRING(Url, 32, LEN(Url) - 31)"
 						}
 					]
 				}
