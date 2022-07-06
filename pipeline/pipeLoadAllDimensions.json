@@ -105,6 +105,19 @@
 					},
 					"waitOnCompletion": true
 				}
+			},
+			{
+				"name": "Execute DimPricelist",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pipeDimPricelist",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
 			}
 		],
 		"annotations": []

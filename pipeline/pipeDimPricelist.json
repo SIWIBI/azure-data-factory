@@ -171,6 +171,65 @@
 						"type": "DatasetReference"
 					}
 				]
+			},
+			{
+				"name": "Update Exledger Key",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Load stageDimPricelist",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "UPDATE stage.Pricelist\nSET _PricelistKey = 'EXL|' + _PricelistKey"
+						}
+					]
+				}
+			},
+			{
+				"name": "Upsert DimPricelist",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Update Exledger Key",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[UpsertDimPricelist]"
+				},
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				}
 			}
 		],
 		"annotations": []
