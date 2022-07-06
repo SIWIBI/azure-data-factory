@@ -282,7 +282,7 @@
 					"scripts": [
 						{
 							"type": "Query",
-							"text": "TRUNCATE TABLE stage.JournalHeader\nTRUNCATE TABLE stage.ERPTransaction\nTRUNCATE TABLE stage.TemporaryFilename"
+							"text": "TRUNCATE TABLE stage.JournalHeader\nTRUNCATE TABLE stage.ERPTransaction\n"
 						}
 					]
 				}
