@@ -19,7 +19,7 @@
 					"value": "@dataset().fileName",
 					"type": "Expression"
 				},
-				"folderPath": "docfiles",
+				"folderPath": "files",
 				"container": "xledger"
 			}
 		}

@@ -1,121 +1,11 @@
 {
-	"name": "pipeFactTransaction_copy1",
+	"name": "pipeFactTransaction_copy2",
 	"properties": {
 		"activities": [
 			{
-				"name": "Load stageJournalHeader",
-				"type": "Copy",
-				"dependsOn": [
-					{
-						"activity": "Script1",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "7.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "JsonSource",
-						"storeSettings": {
-							"type": "HttpReadSettings",
-							"requestMethod": "POST",
-							"additionalHeaders": "Content-Type: application/json",
-							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query {\n  journalHeaders(first: 10000) {\n    edges {\n      node {\n        dbId\n      }\n    }\n  }\n}\"}')}",
-								"type": "Expression"
-							},
-							"requestTimeout": ""
-						},
-						"formatSettings": {
-							"type": "JsonReadSettings"
-						}
-					},
-					"sink": {
-						"type": "AzureSqlSink",
-						"writeBehavior": "insert",
-						"sqlWriterUseTableLock": false
-					},
-					"enableStaging": false,
-					"translator": {
-						"type": "TabularTranslator",
-						"mappings": [
-							{
-								"source": {
-									"path": "['node']['dbId']"
-								},
-								"sink": {
-									"name": "_JournalHeaderKey",
-									"type": "String"
-								}
-							}
-						],
-						"collectionReference": "$['data']['journalHeaders']['edges']"
-					}
-				},
-				"inputs": [
-					{
-						"referenceName": "JSONEXL",
-						"type": "DatasetReference"
-					}
-				],
-				"outputs": [
-					{
-						"referenceName": "dsStageJournalHeaders",
-						"type": "DatasetReference"
-					}
-				]
-			},
-			{
-				"name": "Get HeaderId",
-				"type": "Lookup",
-				"dependsOn": [
-					{
-						"activity": "Load stageJournalHeader",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "7.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "AzureSqlSource",
-						"sqlReaderQuery": "DECLARE @val VARCHAR(MAX)\nselect @val = COALESCE(@val+',' ,'') + _JournalHeaderKey FROM stage.JournalHeader\nSELECT @val as HeaderKey",
-						"queryTimeout": "02:00:00",
-						"partitionOption": "None"
-					},
-					"dataset": {
-						"referenceName": "dsStageJournalHeaders",
-						"type": "DatasetReference"
-					}
-				}
-			},
-			{
 				"name": "Load stageTransaction",
 				"type": "Copy",
-				"dependsOn": [
-					{
-						"activity": "Get HeaderId",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "7.00:00:00",
 					"retry": 0,
@@ -132,7 +22,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: application/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query {\n  transactions(last: 10000, filter: {headerDbID_in: [',activity('Get HeaderId').output.firstrow.HeaderKey,']}) {\n    edges {\n      node {\n        text\n        invoiceAmount\n        taxAmount\n        amount\n        amount3\n        amount4\n        amount5\n        dbId\n        accountDbId\n        glDimension {\n          glObject1 {\n            dbId\n            code\n            description\n          }\n          glObject2 {\n            dbId\n            code\n            description\n          }\n        }\n        quantity\n        header {\n          dbId\n          invoiceFile {\n            url\n          }\n          transactionSource {\n            dbId\n            code\n            description\n          }\n          trRegNumber\n        }\n        period {\n          fromDate\n        }\n      }\n    }\n  }\n}\n\"}')}",
+								"value": "@{concat('{ \"query\" : \"query {\n  transactions(first: 10000, after:\\\"406258448\\\") {\n    edges {\n      node {\n        text\n        invoiceAmount\n        taxAmount\n        amount\n        amount3\n        amount4\n        amount5\n        dbId\n        accountDbId\n        glDimension {\n          glObject1 {\n            dbId\n            code\n            description\n          }\n          glObject2 {\n            dbId\n            code\n            description\n          }\n        }\n        quantity\n        header {\n          dbId\n          invoiceFile {\n            url\n          }\n          transactionSource {\n            dbId\n            code\n            description\n          }\n          trRegNumber\n        }\n        period {\n          fromDate\n        }\n      }\n    }\n  }\n}\n\"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
@@ -364,63 +254,6 @@
 						"type": "DatasetReference"
 					}
 				]
-			},
-			{
-				"name": "Script1",
-				"type": "Script",
-				"dependsOn": [],
-				"policy": {
-					"timeout": "7.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"linkedServiceName": {
-					"referenceName": "SIWIDBConn",
-					"type": "LinkedServiceReference"
-				},
-				"typeProperties": {
-					"scripts": [
-						{
-							"type": "Query",
-							"text": "TRUNCATE TABLE stage.JournalHeader\nTRUNCATE TABLE stage.ERPTransaction"
-						}
-					]
-				}
-			},
-			{
-				"name": "Update Exledger Keys",
-				"type": "Script",
-				"dependsOn": [
-					{
-						"activity": "Load stageTransaction",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "7.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"linkedServiceName": {
-					"referenceName": "SIWIDBConn",
-					"type": "LinkedServiceReference"
-				},
-				"typeProperties": {
-					"scripts": [
-						{
-							"type": "Query",
-							"text": "UPDATE\tstage.ERPTransaction\nSET\t\t_TransactionKey = 'EXL|' + _TransactionKey\n,\t\t_AccountKey = 'EXL|' + _AccountKey\n,\t\t_TransactionSourceKey = 'EXL|' + _TransactionKey\n,\t\t_ProjectKey = 'EXL|' + _ProjectKey\n,\t\t_CostCenterKey = 'EXL|' + _CostCenterKey\n,\t\t_FoundationKey = 'EXL|' + _FoundationKey"
-						}
-					]
-				}
 			}
 		],
 		"parameters": {
