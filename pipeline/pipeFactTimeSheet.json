@@ -337,15 +337,6 @@
 							},
 							{
 								"source": {
-									"path": "['node']['project']['dbId']"
-								},
-								"sink": {
-									"name": "_ProjectKey",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
 									"path": "['node']['timesheetStatus']['name']"
 								},
 								"sink": {
