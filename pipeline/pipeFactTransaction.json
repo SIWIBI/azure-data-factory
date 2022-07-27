@@ -459,6 +459,38 @@
 						}
 					]
 				}
+			},
+			{
+				"name": "Update Xledger keys",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Load stageTransaction",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "UPDATE\tstage.ERPTransaction\nSET\t\t_TransactionKey = 'EXL|' + _TransactionKey\n,\t\t_AccountKey = 'EXL|' + _AccountKey\n,\t\t_TransactionSourceKey = 'EXL|' + _TransactionKey\n,\t\t_ProjectKey = 'EXL|' + _ProjectKey\n,\t\t_CostCenterKey = 'EXL|' + _CostCenterKey\n,\t\t_FoundationKey = 'EXL|' + _FoundationKey"
+						}
+					]
+				}
 			}
 		],
 		"annotations": []
