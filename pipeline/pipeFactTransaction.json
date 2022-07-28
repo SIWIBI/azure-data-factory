@@ -526,7 +526,7 @@
 				}
 			},
 			{
-				"name": "Insert FactFinance",
+				"name": "Upsert FactFinance",
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
