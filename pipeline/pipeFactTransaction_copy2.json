@@ -22,7 +22,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: application/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query {\n  transactions(first: 10000) {\n    edges {\n      node {\n        text\n        invoiceAmount\n        taxAmount\n        amount\n        amount3\n        amount4\n        amount5\n        dbId\n        accountDbId\n        glDimension {\n          glObject1 {\n            dbId\n            code\n            description\n          }\n          glObject2 {\n            dbId\n            code\n            description\n          }\n        }\n        quantity\n        header {\n          dbId\n          invoiceFile {\n            url\n          }\n          transactionSource {\n            dbId\n            code\n            description\n          }\n          owner {\n            dbId\n            code\n            description\n          }\n          transactionNumber\n          trRegNumber\n        }\n        period {\n          fromDate\n        }\n      }\n    }\n  }\n}\n\"}')}",
+								"value": "@{concat('{ \"query\" : \"query {\n  transactions(last: 10000) {\n    edges {\n      node {\n        text\n        invoiceAmount\n        taxAmount\n        amount\n        amount3\n        amount4\n        amount5\n        dbId\n        accountDbId\n        glDimension {\n          glObject1 {\n            dbId\n            code\n            description\n          }\n          glObject2 {\n            dbId\n            code\n            description\n          }\n        }\n        quantity\n        header {\n          dbId\n          invoiceFile {\n            url\n          }\n          transactionSource {\n            dbId\n            code\n            description\n          }\n          owner {\n            dbId\n            code\n            description\n          }\n          transactionNumber\n          trRegNumber\n        }\n        period {\n          fromDate\n        }\n      }\n    }\n  }\n}\n\"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
@@ -42,7 +42,7 @@
 						"mappings": [
 							{
 								"source": {
-									"path": "['node']['text']"
+									"path": "$['data']['transactions']['edges'][0]['node']['text']"
 								},
 								"sink": {
 									"name": "trText",
@@ -51,7 +51,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['invoiceAmount']"
+									"path": "$['data']['transactions']['edges'][0]['node']['invoiceAmount']"
 								},
 								"sink": {
 									"name": "invoiceAmount",
@@ -60,7 +60,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['taxAmount']"
+									"path": "$['data']['transactions']['edges'][0]['node']['taxAmount']"
 								},
 								"sink": {
 									"name": "taxAmount",
@@ -69,7 +69,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['amount']"
+									"path": "$['data']['transactions']['edges'][0]['node']['amount']"
 								},
 								"sink": {
 									"name": "amount",
@@ -78,7 +78,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['amount3']"
+									"path": "$['data']['transactions']['edges'][0]['node']['amount3']"
 								},
 								"sink": {
 									"name": "amount3",
@@ -87,7 +87,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['amount4']"
+									"path": "$['data']['transactions']['edges'][0]['node']['amount4']"
 								},
 								"sink": {
 									"name": "amount4",
@@ -96,7 +96,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['amount5']"
+									"path": "$['data']['transactions']['edges'][0]['node']['amount5']"
 								},
 								"sink": {
 									"name": "amount5",
@@ -105,7 +105,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['dbId']"
+									"path": "$['data']['transactions']['edges'][0]['node']['dbId']"
 								},
 								"sink": {
 									"name": "_TransactionKey",
@@ -114,7 +114,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['accountDbId']"
+									"path": "$['data']['transactions']['edges'][0]['node']['accountDbId']"
 								},
 								"sink": {
 									"name": "_AccountKey",
@@ -123,7 +123,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['glDimension']['glObject1']['dbId']"
+									"path": "$['data']['transactions']['edges'][0]['node']['glDimension']['glObject1']['dbId']"
 								},
 								"sink": {
 									"name": "_CostCenterKey",
@@ -132,7 +132,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['glDimension']['glObject1']['code']"
+									"path": "$['data']['transactions']['edges'][0]['node']['glDimension']['glObject1']['code']"
 								},
 								"sink": {
 									"name": "costCenterCode",
@@ -141,7 +141,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['glDimension']['glObject1']['description']"
+									"path": "$['data']['transactions']['edges'][0]['node']['glDimension']['glObject1']['description']"
 								},
 								"sink": {
 									"name": "costCenterDescription",
@@ -150,7 +150,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['glDimension']['glObject2']"
+									"path": "$['data']['transactions']['edges'][0]['node']['glDimension']['glObject2']['dbId']"
 								},
 								"sink": {
 									"name": "_ProjectKey",
@@ -159,7 +159,25 @@
 							},
 							{
 								"source": {
-									"path": "['node']['quantity']"
+									"path": "$['data']['transactions']['edges'][0]['node']['glDimension']['glObject2']['code']"
+								},
+								"sink": {
+									"name": "projectCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['data']['transactions']['edges'][0]['node']['glDimension']['glObject2']['description']"
+								},
+								"sink": {
+									"name": "projectDescription",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['data']['transactions']['edges'][0]['node']['quantity']"
 								},
 								"sink": {
 									"name": "quantity",
@@ -168,7 +186,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['header']['invoiceFile']"
+									"path": "$['data']['transactions']['edges'][0]['node']['header']['invoiceFile']['url']"
 								},
 								"sink": {
 									"name": "Url",
@@ -177,7 +195,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['header']['transactionSource']['dbId']"
+									"path": "$['data']['transactions']['edges'][0]['node']['header']['transactionSource']['dbId']"
 								},
 								"sink": {
 									"name": "_TransactionSourceKey",
@@ -186,7 +204,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['header']['transactionSource']['code']"
+									"path": "$['data']['transactions']['edges'][0]['node']['header']['transactionSource']['code']"
 								},
 								"sink": {
 									"name": "transactionSourceCode",
@@ -195,7 +213,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['header']['transactionSource']['description']"
+									"path": "$['data']['transactions']['edges'][0]['node']['header']['transactionSource']['description']"
 								},
 								"sink": {
 									"name": "transactionSourceDesc",
@@ -204,7 +222,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['header']['owner']['dbId']"
+									"path": "$['data']['transactions']['edges'][0]['node']['header']['owner']['dbId']"
 								},
 								"sink": {
 									"name": "_FoundationKey",
@@ -213,7 +231,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['header']['owner']['code']"
+									"path": "$['data']['transactions']['edges'][0]['node']['header']['owner']['code']"
 								},
 								"sink": {
 									"name": "foundationCode",
@@ -222,7 +240,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['header']['owner']['description']"
+									"path": "$['data']['transactions']['edges'][0]['node']['header']['owner']['description']"
 								},
 								"sink": {
 									"name": "foundationDescription",
@@ -231,7 +249,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['header']['transactionNumber']"
+									"path": "$['data']['transactions']['edges'][0]['node']['header']['transactionNumber']"
 								},
 								"sink": {
 									"name": "transactionNumber",
@@ -240,7 +258,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['period']['fromDate']"
+									"path": "$['data']['transactions']['edges'][0]['node']['period']['fromDate']"
 								},
 								"sink": {
 									"name": "createdAt",
