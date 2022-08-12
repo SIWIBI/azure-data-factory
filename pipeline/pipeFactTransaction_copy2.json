@@ -150,28 +150,10 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['transactions']['edges'][0]['node']['glDimension']['glObject2']['dbId']"
+									"path": "$['data']['transactions']['edges'][0]['node']['glDimension']['glObject2']"
 								},
 								"sink": {
 									"name": "_ProjectKey",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "$['data']['transactions']['edges'][0]['node']['glDimension']['glObject2']['code']"
-								},
-								"sink": {
-									"name": "projectCode",
-									"type": "String"
-								}
-							},
-							{
-								"source": {
-									"path": "$['data']['transactions']['edges'][0]['node']['glDimension']['glObject2']['description']"
-								},
-								"sink": {
-									"name": "projectDescription",
 									"type": "String"
 								}
 							},
@@ -186,7 +168,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['transactions']['edges'][0]['node']['header']['invoiceFile']['url']"
+									"path": "$['data']['transactions']['edges'][0]['node']['header']['invoiceFile']"
 								},
 								"sink": {
 									"name": "Url",
