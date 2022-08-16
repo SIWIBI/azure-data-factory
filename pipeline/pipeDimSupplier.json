@@ -64,6 +64,91 @@
 						"type": "DatasetReference"
 					}
 				}
+			},
+			{
+				"name": "Load stageSupplier",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Get LastLodDate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "POST",
+							"requestBody": "{ \"query\" : \"query {\n  suppliers(last: 10000) {\n    edges {\n      node {\n        dbId\n        code\n        description\n      }\n    }\n  }\n}\n\"}",
+							"requestTimeout": ""
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "['node']['dbId']"
+								},
+								"sink": {
+									"name": "_SupplierKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['code']"
+								},
+								"sink": {
+									"name": "supplierCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['description']"
+								},
+								"sink": {
+									"name": "supplierDescription",
+									"type": "String"
+								}
+							}
+						],
+						"collectionReference": "$['data']['suppliers']['edges']"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "JSONEXL",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "dsDimSupplier",
+						"type": "DatasetReference"
+					}
+				]
 			}
 		],
 		"annotations": []
