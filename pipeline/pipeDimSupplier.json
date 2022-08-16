@@ -1,0 +1,71 @@
+{
+	"name": "pipeDimSupplier",
+	"properties": {
+		"activities": [
+			{
+				"name": "Truncate stageSupplier",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "TRUNCATE TABLE stage.Supplier"
+						}
+					]
+				}
+			},
+			{
+				"name": "Get LastLodDate",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Truncate stageSupplier",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderStoredProcedureName": "[dbo].[GetLastLoadDate]",
+						"storedProcedureParameters": {
+							"TableName": {
+								"type": "String",
+								"value": "DimSupplier"
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "dsLastLoadDate",
+						"type": "DatasetReference"
+					}
+				}
+			}
+		],
+		"annotations": []
+	}
+}
