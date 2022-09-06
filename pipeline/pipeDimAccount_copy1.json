@@ -42,7 +42,7 @@
 						"mappings": [
 							{
 								"source": {
-									"path": "$['data']['accounts']['edges'][0]['node']['dbId']"
+									"path": "['node']['dbId']"
 								},
 								"sink": {
 									"name": "_AccountKey",
@@ -51,7 +51,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['accounts']['edges'][0]['node']['code']"
+									"path": "['node']['code']"
 								},
 								"sink": {
 									"name": "code",
@@ -60,7 +60,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['accounts']['edges'][0]['node']['description']"
+									"path": "['node']['description']"
 								},
 								"sink": {
 									"name": "description",
@@ -69,7 +69,7 @@
 							},
 							{
 								"source": {
-									"path": "$['data']['accounts']['edges'][0]['node']['accountGroup']['code']"
+									"path": "['node']['accountGroup']['code']"
 								},
 								"sink": {
 									"name": "AccountGroupCode",
