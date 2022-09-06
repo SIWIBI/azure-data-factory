@@ -1,0 +1,99 @@
+{
+	"name": "pipeDimAccount_copy1",
+	"properties": {
+		"activities": [
+			{
+				"name": "Load stageAccount",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "POST",
+							"additionalHeaders": "Content-Type: application/json",
+							"requestBody": {
+								"value": "@{concat('{ \"query\" : \"query {\n  accounts(first: 2000, filter: {chartOfAccountDbId: 3}) {\n    edges {\n      node {\n        dbId\n        code\n        chartOfAccount {\n          dbId\n          name\n        }\n        description\n        accountGroup {\n          code\n          dbId\n          description\n        }\n        owner {\n          ownerDbId\n          description\n        }\n      }\n    }\n  }\n}\n\"}')}",
+								"type": "Expression"
+							},
+							"requestTimeout": ""
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "$['data']['accounts']['edges'][0]['node']['dbId']"
+								},
+								"sink": {
+									"name": "_AccountKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['data']['accounts']['edges'][0]['node']['code']"
+								},
+								"sink": {
+									"name": "code",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['data']['accounts']['edges'][0]['node']['description']"
+								},
+								"sink": {
+									"name": "description",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "$['data']['accounts']['edges'][0]['node']['accountGroup']['code']"
+								},
+								"sink": {
+									"name": "AccountGroupCode",
+									"type": "String"
+								}
+							}
+						],
+						"collectionReference": "$['data']['accounts']['edges']"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "JSONEXL",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "dsStageAccount",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"annotations": []
+	}
+}
