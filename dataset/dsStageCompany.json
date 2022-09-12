@@ -1,0 +1,30 @@
+{
+	"name": "dsStageCompany",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SIWIDBConn",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "CompanyKey",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "code",
+				"type": "nvarchar"
+			},
+			{
+				"name": "description",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "stage",
+			"table": "Company"
+		}
+	}
+}
