@@ -1,0 +1,297 @@
+{
+	"name": "pipeFactTimeSheet_copy1",
+	"properties": {
+		"activities": [
+			{
+				"name": "Load stageTimesheet",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "POST",
+							"additionalHeaders": "Content-Tpe: application/json",
+							"requestBody": {
+								"value": "@{concat('{ \"query\" : \"query \n{\n  timesheets(first: 10000) {\n    edges {\n      node {\n        dbId\n        assignmentDate\n        approvedAt\n        invoiceHours\n        workingHours\n        approved\n        projectDbId\n        hourlyCost\n        hourlyRevenueCurrency\n        employeeDbId\n        text\n        invoiced\n        assignment {\n          dbId\n          code\n          description\n        }\n        activity {\n          dbId\n          code\n          description\n        }\n        objectValue {\n          dbId\n          code\n          description\n        }\n        project {\n          pricelist {\n            dbId\n            code\n            description\n            object {\n              code\n              name\n            }\n          }\n          company {\n            description\n          }\n          dbId\n        }\n        timesheetStatus {\n          name\n        }\n      }\n    }\n  }\n}\n\"}\n')}",
+								"type": "Expression"
+							},
+							"requestTimeout": ""
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "['node']['dbId']"
+								},
+								"sink": {
+									"name": "_TimesheetKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['assignmentDate']"
+								},
+								"sink": {
+									"name": "assignmentDate",
+									"type": "DateTime"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['approvedAt']"
+								},
+								"sink": {
+									"name": "approvedAt",
+									"type": "DateTime"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['invoiceHours']"
+								},
+								"sink": {
+									"name": "invoiceHours",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['workingHours']"
+								},
+								"sink": {
+									"name": "workingHours",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['approved']"
+								},
+								"sink": {
+									"name": "approved",
+									"type": "Boolean"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['projectDbId']"
+								},
+								"sink": {
+									"name": "_ProjectKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['hourlyCost']"
+								},
+								"sink": {
+									"name": "hourlyCost",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['hourlyRevenueCurrency']"
+								},
+								"sink": {
+									"name": "hourlyRevenueCurrency",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['employeeDbId']"
+								},
+								"sink": {
+									"name": "_EmployeeKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['text']"
+								},
+								"sink": {
+									"name": "textTS",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['invoiced']"
+								},
+								"sink": {
+									"name": "invoiced",
+									"type": "Boolean"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['assignment']['dbId']"
+								},
+								"sink": {
+									"name": "_AssignmentKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['assignment']['code']"
+								},
+								"sink": {
+									"name": "assignmentCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['assignment']['description']"
+								},
+								"sink": {
+									"name": "assignmentDescription",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['activity']['dbId']"
+								},
+								"sink": {
+									"name": "_ActivityKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['activity']['code']"
+								},
+								"sink": {
+									"name": "activityCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['activity']['description']"
+								},
+								"sink": {
+									"name": "activityDescription",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['objectValue']['dbId']"
+								},
+								"sink": {
+									"name": "_RegionKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['objectValue']['code']"
+								},
+								"sink": {
+									"name": "regionCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['objectValue']['description']"
+								},
+								"sink": {
+									"name": "regionDescription",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['project']['pricelist']['dbId']"
+								},
+								"sink": {
+									"name": "_PricelistKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['project']['pricelist']['code']"
+								},
+								"sink": {
+									"name": "pricelistCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['project']['pricelist']['description']"
+								},
+								"sink": {
+									"name": "pricelistDescription",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['project']['company']['description']"
+								},
+								"sink": {
+									"name": "companyDescription",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['timesheetStatus']['name']"
+								},
+								"sink": {
+									"name": "timesheetStatus",
+									"type": "String"
+								}
+							}
+						],
+						"collectionReference": "$['data']['timesheets']['edges']"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "JSONEXL",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "dsTimeSheet",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"annotations": []
+	}
+}

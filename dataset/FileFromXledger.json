@@ -1,0 +1,25 @@
+{
+	"name": "FileFromXledger",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "HttpGetFile",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"partialUrl": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation",
+				"relativeUrl": {
+					"value": "@dataset().partialUrl",
+					"type": "Expression"
+				}
+			}
+		}
+	}
+}

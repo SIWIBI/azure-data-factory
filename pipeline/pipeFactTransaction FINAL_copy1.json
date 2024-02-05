@@ -1,0 +1,576 @@
+{
+	"name": "pipeFactTransaction FINAL_copy1",
+	"properties": {
+		"activities": [
+			{
+				"name": "Load stageJournalHeader",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Script1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "POST",
+							"additionalHeaders": "Content-Type: application/json",
+							"requestBody": {
+								"value": "@{concat('{ \"query\" : \"query {\n  journalHeaders(last: 10000) {\n    edges {\n      node {\n        dbId\n      }\n    }\n  }\n}\"}')}",
+								"type": "Expression"
+							},
+							"requestTimeout": ""
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "['node']['dbId']"
+								},
+								"sink": {
+									"name": "_JournalHeaderKey",
+									"type": "String"
+								}
+							}
+						],
+						"collectionReference": "$['data']['journalHeaders']['edges']"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "JSONEXL",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "dsStageJournalHeaders",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Get HeaderId",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Load stageJournalHeader",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "DECLARE @val VARCHAR(MAX)\nselect @val = COALESCE(@val+',' ,'') + _JournalHeaderKey FROM stage.JournalHeader\nSELECT @val as HeaderKey",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "dsStageJournalHeaders",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "Load stageTransaction",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Get HeaderId",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "HttpReadSettings",
+							"requestMethod": "POST",
+							"additionalHeaders": "Content-Type: application/json",
+							"requestBody": {
+								"value": "@{concat('{ \"query\" : \"query {\n  transactions(last: 10000, filter: {headerDbID_in: [',activity('Get HeaderId').output.firstrow.HeaderKey,']}) {\n    edges {\n      node {\n        text\n        invoiceAmount\n        taxAmount\n        amount\n        amount3\n        amount4\n        amount5\n        dbId\n        accountDbId\n        glDimension {\n          glObject1 {\n            dbId\n            code\n            description\n          }\n          glObject2 {\n            dbId\n            code\n            description\n          }\n        }\n        quantity\n        header {\n          dbId\n          invoiceFile {\n            url\n          }\n          transactionSource {\n            dbId\n            code\n            description\n          }\n          trRegNumber\n        }\n        period {\n          fromDate\n        }\n      }\n    }\n  }\n}\n\"}')}",
+								"type": "Expression"
+							},
+							"requestTimeout": ""
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "['node']['text']"
+								},
+								"sink": {
+									"name": "trText",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['invoiceAmount']"
+								},
+								"sink": {
+									"name": "invoiceAmount",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['taxAmount']"
+								},
+								"sink": {
+									"name": "taxAmount",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['amount']"
+								},
+								"sink": {
+									"name": "amount",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['amount3']"
+								},
+								"sink": {
+									"name": "amount3",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['amount4']"
+								},
+								"sink": {
+									"name": "amount4",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['amount5']"
+								},
+								"sink": {
+									"name": "amount5",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['dbId']"
+								},
+								"sink": {
+									"name": "_TransactionKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['accountDbId']"
+								},
+								"sink": {
+									"name": "_AccountKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['glDimension']['glObject1']['dbId']"
+								},
+								"sink": {
+									"name": "_CostCenterKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['glDimension']['glObject1']['code']"
+								},
+								"sink": {
+									"name": "costCenterCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['glDimension']['glObject1']['description']"
+								},
+								"sink": {
+									"name": "costCenterDescription",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['glDimension']['glObject2']['dbId']"
+								},
+								"sink": {
+									"name": "_ProjectKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['glDimension']['glObject2']['code']"
+								},
+								"sink": {
+									"name": "projectCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['glDimension']['glObject2']['description']"
+								},
+								"sink": {
+									"name": "projectDescription",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['quantity']"
+								},
+								"sink": {
+									"name": "quantity",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['header']['invoiceFile']['url']"
+								},
+								"sink": {
+									"name": "Url",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['header']['transactionSource']['dbId']"
+								},
+								"sink": {
+									"name": "_TransactionSourceKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['header']['transactionSource']['code']"
+								},
+								"sink": {
+									"name": "transactionSourceCode",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['header']['transactionSource']['description']"
+								},
+								"sink": {
+									"name": "transactionSourceDesc",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['header']['trRegNumber']"
+								},
+								"sink": {
+									"name": "transactionRegNumber",
+									"type": "Int32"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['period']['fromDate']"
+								},
+								"sink": {
+									"name": "createdAt",
+									"type": "DateTime"
+								}
+							}
+						],
+						"collectionReference": "$['data']['transactions']['edges']"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "JSONEXL",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "dsStageTransaction",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Script1",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "TRUNCATE TABLE stage.JournalHeader\nTRUNCATE TABLE stage.ERPTransaction\nTRUNCATE TABLE stage.TemporaryFilename"
+						}
+					]
+				}
+			},
+			{
+				"name": "Get Filename",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Insert unique Url",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select top(10) partialUrl\n, fileName\nFROM\tstage.TemporaryFilename\nwhere id > 500",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "dsFilename",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach Fllename",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Filename",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Filename').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Copy data1",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "BinarySource",
+									"storeSettings": {
+										"type": "HttpReadSettings",
+										"requestMethod": "GET"
+									},
+									"formatSettings": {
+										"type": "BinaryReadSettings"
+									}
+								},
+								"sink": {
+									"type": "BinarySink",
+									"storeSettings": {
+										"type": "AzureBlobStorageWriteSettings"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "FileFromXledger",
+									"type": "DatasetReference",
+									"parameters": {
+										"partialUrl": {
+											"value": "@item().partialUrl",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "SaveBlobFile",
+									"type": "DatasetReference",
+									"parameters": {
+										"fileName": {
+											"value": "@item().Filename",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "Insert unique Url",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Update Exledger Keys",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "INSERT INTO stage.TemporaryFilename\nSELECT DISTINCT\tUrl, null, null, null\nFROM\tstage.ERPTransaction\nWHERE\tUrl IS NOT NULL\n\nUPDATE\t\tstage.TemporaryFilename\nSET\t\t\tfilename = CAST(NEWID() AS VARCHAR(100)) + '.pdf'\n,\t\t\tpartialUrl = SUBSTRING(tmp.Url, 32, LEN(tmp.Url) - 31)\n,\t\t\t_TransKey = erp._TransactionKey\nFROM\t\tstage.TemporaryFilename tmp \nINNER JOIN\tstage.ERPTransaction erp ON tmp.Url = erp.Url"
+						}
+					]
+				}
+			},
+			{
+				"name": "Update Exledger Keys",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Load stageTransaction",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SIWIDBConn",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "UPDATE\tstage.ERPTransaction\nSET\t\t_TransactionKey = 'EXL|' + _TransactionKey\n,\t\t_AccountKey = 'EXL|' + _AccountKey\n,\t\t_TransactionSourceKey = 'EXL|' + _TransactionKey\n,\t\t_ProjectKey = 'EXL|' + _ProjectKey\n,\t\t_CostCenterKey = 'EXL|' + _CostCenterKey\n,\t\t_FoundationKey = 'EXL|' + _FoundationKey"
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"partialUrls": {
+				"type": "array"
+			}
+		},
+		"annotations": []
+	}
+}

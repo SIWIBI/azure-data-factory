@@ -1,0 +1,44 @@
+{
+	"name": "dsStagePricelist",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SIWIDBConn",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "PricelistKey",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "_PricelistKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "code",
+				"type": "nvarchar"
+			},
+			{
+				"name": "description",
+				"type": "nvarchar"
+			},
+			{
+				"name": "price",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "rankDescription",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "stage",
+			"table": "Pricelist"
+		}
+	}
+}

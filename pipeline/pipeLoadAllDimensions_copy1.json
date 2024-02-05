@@ -1,5 +1,5 @@
 {
-	"name": "pipeLoadAllDimensions",
+	"name": "pipeLoadAllDimensions_copy1",
 	"properties": {
 		"activities": [
 			{
@@ -10,19 +10,6 @@
 				"typeProperties": {
 					"pipeline": {
 						"referenceName": "pipeDimAccountGroup",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true
-				}
-			},
-			{
-				"name": "Execute DimAccount",
-				"type": "ExecutePipeline",
-				"dependsOn": [],
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "pipeDimAccount",
 						"type": "PipelineReference"
 					},
 					"waitOnCompletion": true

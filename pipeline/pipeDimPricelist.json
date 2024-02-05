@@ -1,9 +1,9 @@
 {
-	"name": "pipeDimActivity",
+	"name": "pipeDimPricelist",
 	"properties": {
 		"activities": [
 			{
-				"name": "Truncate stageAcitivty",
+				"name": "Truncate stagePricelist",
 				"type": "Script",
 				"dependsOn": [],
 				"policy": {
@@ -22,17 +22,17 @@
 					"scripts": [
 						{
 							"type": "Query",
-							"text": "TRUNCATE TABLE stage.Activity"
+							"text": "TRUNCATE TABLE stage.Pricelist"
 						}
 					]
 				}
 			},
 			{
-				"name": "Get LastLoadDate DimActivity",
+				"name": "Get LastLoadDate DimPricelist",
 				"type": "Lookup",
 				"dependsOn": [
 					{
-						"activity": "Truncate stageAcitivty",
+						"activity": "Truncate stagePricelist",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -53,7 +53,7 @@
 						"storedProcedureParameters": {
 							"TableName": {
 								"type": "String",
-								"value": "DimActivity"
+								"value": "DimPricelist"
 							}
 						},
 						"queryTimeout": "02:00:00",
@@ -66,11 +66,11 @@
 				}
 			},
 			{
-				"name": "Load stageActivity",
+				"name": "Load stageDimPricelist",
 				"type": "Copy",
 				"dependsOn": [
 					{
-						"activity": "Get LastLoadDate DimActivity",
+						"activity": "Get LastLoadDate DimPricelist",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -92,7 +92,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: application/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query {\n  objectValues(first: 10000, filter: {definitionId:993, modifiedAt_gte:\\\"',activity('Get LastLoadDate DimActivity').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        code\n        description\n        dbId\n      }\n    }\n  }\n}\"}')}",
+								"value": "@{concat('{ \"query\" : \"query {\n  pricelists(first: 1000, filter: {ownerDbId: 23003234, modifiedAt_gte: \\\"',activity('Get LastLoadDate DimPricelist').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        pricelist {\n          dbId\n          code\n          description\n        }\n        price\n        objectValue {\n          description\n        }\n      }\n    }\n  }\n}\"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
@@ -112,7 +112,16 @@
 						"mappings": [
 							{
 								"source": {
-									"path": "['node']['code']"
+									"path": "['node']['pricelist']['dbId']"
+								},
+								"sink": {
+									"name": "_PricelistKey",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['pricelist']['code']"
 								},
 								"sink": {
 									"name": "code",
@@ -121,7 +130,7 @@
 							},
 							{
 								"source": {
-									"path": "['node']['description']"
+									"path": "['node']['pricelist']['description']"
 								},
 								"sink": {
 									"name": "description",
@@ -130,15 +139,24 @@
 							},
 							{
 								"source": {
-									"path": "['node']['dbId']"
+									"path": "['node']['price']"
 								},
 								"sink": {
-									"name": "_ActivityKey",
+									"name": "price",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"path": "['node']['objectValue']['description']"
+								},
+								"sink": {
+									"name": "rankDescription",
 									"type": "String"
 								}
 							}
 						],
-						"collectionReference": "$['data']['objectValues']['edges']"
+						"collectionReference": "$['data']['pricelists']['edges']"
 					}
 				},
 				"inputs": [
@@ -149,17 +167,17 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "dsStageActivity",
+						"referenceName": "dsStagePricelist",
 						"type": "DatasetReference"
 					}
 				]
 			},
 			{
-				"name": "Update Xledger keys",
+				"name": "Update Exledger Key",
 				"type": "Script",
 				"dependsOn": [
 					{
-						"activity": "Load stageActivity",
+						"activity": "Load stageDimPricelist",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -181,17 +199,17 @@
 					"scripts": [
 						{
 							"type": "Query",
-							"text": "UPDATE stage.Activity\nSET _ActivityKey = 'EXL|' + _ActivityKey"
+							"text": "UPDATE stage.Pricelist\nSET _PricelistKey = 'EXL|' + '|' + _PricelistKey + '|' + rankDescription + '|' + CAST(price AS VARCHAR(50))"
 						}
 					]
 				}
 			},
 			{
-				"name": "Upsert DimActivity",
+				"name": "Upsert DimPricelist",
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
-						"activity": "Update Xledger keys",
+						"activity": "Update Exledger Key",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -206,40 +224,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"storedProcedureName": "[dbo].[UpsertDimActivity]"
-				},
-				"linkedServiceName": {
-					"referenceName": "SIWIDBConn",
-					"type": "LinkedServiceReference"
-				}
-			},
-			{
-				"name": "Update LastLoadDate",
-				"type": "SqlServerStoredProcedure",
-				"dependsOn": [
-					{
-						"activity": "Upsert DimActivity",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "7.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"storedProcedureName": "[dbo].[UpdateLastLoadDate]",
-					"storedProcedureParameters": {
-						"TableName": {
-							"value": "DimActivity",
-							"type": "String"
-						}
-					}
+					"storedProcedureName": "[dbo].[UpsertDimPricelist]"
 				},
 				"linkedServiceName": {
 					"referenceName": "SIWIDBConn",

@@ -1,0 +1,27 @@
+{
+	"name": "SaveBlobFile",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SIWIBlobStorage",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"fileName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": "files",
+				"container": "xledger"
+			}
+		}
+	}
+}

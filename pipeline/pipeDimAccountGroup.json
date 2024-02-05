@@ -1,9 +1,9 @@
 {
-	"name": "pipeDimActivity",
+	"name": "pipeDimAccountGroup",
 	"properties": {
 		"activities": [
 			{
-				"name": "Truncate stageAcitivty",
+				"name": "Truncate stageAccountGroup",
 				"type": "Script",
 				"dependsOn": [],
 				"policy": {
@@ -22,17 +22,17 @@
 					"scripts": [
 						{
 							"type": "Query",
-							"text": "TRUNCATE TABLE stage.Activity"
+							"text": "TRUNCATE TABLE stage.AccountGroup"
 						}
 					]
 				}
 			},
 			{
-				"name": "Get LastLoadDate DimActivity",
+				"name": "Get LastLoadDate DimAccountGroup",
 				"type": "Lookup",
 				"dependsOn": [
 					{
-						"activity": "Truncate stageAcitivty",
+						"activity": "Truncate stageAccountGroup",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -53,7 +53,7 @@
 						"storedProcedureParameters": {
 							"TableName": {
 								"type": "String",
-								"value": "DimActivity"
+								"value": "DimAccountGroup"
 							}
 						},
 						"queryTimeout": "02:00:00",
@@ -66,11 +66,11 @@
 				}
 			},
 			{
-				"name": "Load stageActivity",
+				"name": "Load stageAccountGroup",
 				"type": "Copy",
 				"dependsOn": [
 					{
-						"activity": "Get LastLoadDate DimActivity",
+						"activity": "Get LastLoadDate DimAccountGroup",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -92,7 +92,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: application/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query {\n  objectValues(first: 10000, filter: {definitionId:993, modifiedAt_gte:\\\"',activity('Get LastLoadDate DimActivity').output.firstrow.LastLoadDate,'\\\"}) {\n    edges {\n      node {\n        code\n        description\n        dbId\n      }\n    }\n  }\n}\"}')}",
+								"value": "@{concat('{ \"query\" : \"query {  objectValues(first: 3000, filter: {modifiedAt_gte:\\\"',activity('Get LastLoadDate DimAccountGroup').output.firstrow.LastLoadDate,'\\\" definitionId:879}) { edges { node { code description dbId } } } } \"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
@@ -133,7 +133,7 @@
 									"path": "['node']['dbId']"
 								},
 								"sink": {
-									"name": "_ActivityKey",
+									"name": "_AccountGroupKey",
 									"type": "String"
 								}
 							}
@@ -149,17 +149,17 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "dsStageActivity",
+						"referenceName": "dsStageAccountGroup",
 						"type": "DatasetReference"
 					}
 				]
 			},
 			{
-				"name": "Update Xledger keys",
+				"name": "Update Exledger keys",
 				"type": "Script",
 				"dependsOn": [
 					{
-						"activity": "Load stageActivity",
+						"activity": "Load stageAccountGroup",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -181,17 +181,17 @@
 					"scripts": [
 						{
 							"type": "Query",
-							"text": "UPDATE stage.Activity\nSET _ActivityKey = 'EXL|' + _ActivityKey"
+							"text": "UPDATE stage.AccountGroup\nSET _AccountGroupKey = 'EXL|' + _AccountGroupKey"
 						}
 					]
 				}
 			},
 			{
-				"name": "Upsert DimActivity",
+				"name": "Upsert DimAccountGroup",
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
-						"activity": "Update Xledger keys",
+						"activity": "Update Exledger keys",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -206,7 +206,7 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"storedProcedureName": "[dbo].[UpsertDimActivity]"
+					"storedProcedureName": "[dbo].[UpsertDimAccountGroup]"
 				},
 				"linkedServiceName": {
 					"referenceName": "SIWIDBConn",
@@ -218,7 +218,7 @@
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
-						"activity": "Upsert DimActivity",
+						"activity": "Upsert DimAccountGroup",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -236,7 +236,7 @@
 					"storedProcedureName": "[dbo].[UpdateLastLoadDate]",
 					"storedProcedureParameters": {
 						"TableName": {
-							"value": "DimActivity",
+							"value": "DimAccountGroup",
 							"type": "String"
 						}
 					}

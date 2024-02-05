@@ -1,0 +1,34 @@
+{
+	"name": "dsDimSupplier",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SIWIDBConn",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "SupplierKey",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "_SupplierKey",
+				"type": "nvarchar"
+			},
+			{
+				"name": "supplierCode",
+				"type": "nvarchar"
+			},
+			{
+				"name": "supplierDescription",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "stage",
+			"table": "Supplier"
+		}
+	}
+}

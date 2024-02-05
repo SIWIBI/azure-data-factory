@@ -67,7 +67,7 @@
 							"requestMethod": "POST",
 							"additionalHeaders": "Content-Type: application/json",
 							"requestBody": {
-								"value": "@{concat('{ \"query\" : \"query { employeeGroups(last: 100, filter: {modifiedAt_gt: \\\"',activity('Get LastLoadDate DimEmployeeGroup').output.firstrow.LastLoadDate,'\\\"}) { edges { node { code createdAt dbId description modifiedAt } } } } \"}')}",
+								"value": "@{concat('{ \"query\" : \"query { employeeGroups(last: 100, filter: {modifiedAt_gte: \\\"',activity('Get LastLoadDate DimEmployeeGroup').output.firstrow.LastLoadDate,'\\\"}) { edges { node { code createdAt dbId description modifiedAt } } } } \"}')}",
 								"type": "Expression"
 							},
 							"requestTimeout": ""
