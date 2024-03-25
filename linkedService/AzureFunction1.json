@@ -5,9 +5,9 @@
 		"annotations": [],
 		"type": "AzureFunction",
 		"typeProperties": {
-			"functionAppUrl": "https://az-transaction-full-load.azurewebsites.net",
+			"functionAppUrl": "https://az-transaction-full-load.azurewebsites.net/api/az_transaction_full?code=uk5mKZ_ytlo1_J7mkpbSvafq7MEQHqNb5tt9gzkCoV6mAzFud4Q7Uw==",
 			"authentication": "Anonymous",
-			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDczM0Q4NzAzLTkwQTItNDIxMi05QzYxLTA0MzczN0ZBMDY2Ml9hMDNhZjJkMS1mODNhLTQyNTgtYjljZC1jN2FhNTYwYjY2ZWMiDQp9"
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDczM0Q4NzAzLTkwQTItNDIxMi05QzYxLTA0MzczN0ZBMDY2Ml8wODg3MDE4OC1hNTlkLTRlMzctYTU5Yi02MDVjZWFjZGQ5MzIiDQp9"
 		}
 	}
 }
